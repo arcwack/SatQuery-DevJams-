@@ -5,13 +5,18 @@ from __future__ import annotations
 import json
 import logging
 import os
+from pathlib import Path
 from typing import Any
 
-import openai
+from dotenv import load_dotenv
+from google import genai
+from google.genai import errors
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 logger = logging.getLogger(__name__)
 
-MODEL = "gpt-4o-mini"
+MODEL = "gemini-3.6-flash"
 TEMPERATURE = 0.2
 
 SYSTEM_PROMPT = (
@@ -27,17 +32,17 @@ DEFAULT_PROMPT = (
     "the dominant vegetation and water presence."
 )
 
-_client: openai.OpenAI | None = None
+_client: genai.Client | None = None
 
 
-def _get_client() -> openai.OpenAI:
-    """Return a cached OpenAI client, initializing from OPENAI_API_KEY."""
+def _get_client() -> genai.Client:
+    """Return a cached Gemini client initialized from GEMINI_API_KEY."""
     global _client
     if _client is None:
-        api_key = os.getenv("OPENAI_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
-            raise ValueError("OPENAI_API_KEY is not set.")
-        _client = openai.OpenAI(api_key=api_key)
+            raise ValueError("GEMINI_API_KEY is not set.")
+        _client = genai.Client(api_key=api_key)
     return _client
 
 
@@ -54,15 +59,15 @@ def generate_spatial_response(
     """Return a plain-language answer to user_query grounded in gis_data."""
     content = _build_user_prompt(user_query, gis_data or {})
     try:
-        completion = _get_client().chat.completions.create(
+        response = _get_client().models.generate_content(
             model=MODEL,
-            temperature=TEMPERATURE,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": content},
-            ],
+            contents=content,
+            config=genai.types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                temperature=TEMPERATURE,
+            ),
         )
-    except openai.OpenAIError as exc:
-        logger.error("OpenAI API request failed", exc_info=True)
+    except errors.ClientError as exc:
+        logger.error("Gemini API request failed", exc_info=True)
         raise RuntimeError(f"LLM request failed: {exc}") from exc
-    return completion.choices[0].message.content or ""
+    return response.text or ""
