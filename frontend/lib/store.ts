@@ -7,6 +7,7 @@ import type {
   GeoJSONGeometry,
   HighlightFeatureCollection,
   RasterInfo,
+  RegionAnalysis,
 } from "./api";
 
 export interface ChatMessage {
@@ -37,6 +38,8 @@ interface WorkspaceState {
   messages: ChatMessage[];
   evidence: Evidence | null;
   sending: boolean;
+  regionResult: RegionAnalysis | null;
+  analyzing: boolean;
 
   setRasters: (rasters: RasterInfo[]) => void;
   setActiveYear: (year: number) => void;
@@ -49,6 +52,8 @@ interface WorkspaceState {
   addMessage: (role: "user" | "assistant", text: string) => void;
   setEvidence: (evidence: Evidence | null) => void;
   setSending: (sending: boolean) => void;
+  setRegionResult: (result: RegionAnalysis | null) => void;
+  setAnalyzing: (analyzing: boolean) => void;
 }
 
 let messageId = 0;
@@ -65,6 +70,8 @@ export const useMapStore = create<WorkspaceState>((set) => ({
   messages: [],
   evidence: null,
   sending: false,
+  regionResult: null,
+  analyzing: false,
 
   setRasters: (rasters) => set({ rasters }),
   setActiveYear: (activeYear) => set({ activeYear }),
@@ -78,4 +85,6 @@ export const useMapStore = create<WorkspaceState>((set) => ({
     set((s) => ({ messages: [...s.messages, { id: messageId++, role, text }] })),
   setEvidence: (evidence) => set({ evidence }),
   setSending: (sending) => set({ sending }),
+  setRegionResult: (regionResult) => set({ regionResult }),
+  setAnalyzing: (analyzing) => set({ analyzing }),
 }));

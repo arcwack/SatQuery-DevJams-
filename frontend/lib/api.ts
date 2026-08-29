@@ -89,6 +89,17 @@ export interface Anomaly {
   zoom_level: number;
 }
 
+export interface RegionAnalysis {
+  water_pct: number;
+  vegetation_pct: number;
+  built_up_pct: number;
+  valid_pixels: number;
+  start_date: string;
+  end_date: string;
+  changed: boolean;
+  change: { water: number; vegetation: number; built_up: number };
+}
+
 export interface QueryBody {
   geometry: GeoJSONGeometry;
   query?: string;
@@ -162,4 +173,12 @@ export function postTimeline(body: QueryBody): Promise<TimelineResult> {
 
 export function postSummarize(body: QueryBody): Promise<RegionSummary> {
   return postJSON<RegionSummary>("/api/summarize-region", body);
+}
+
+export function postAnalyze(body: {
+  geometry: GeoJSONGeometry;
+  start_date?: string;
+  end_date?: string;
+}): Promise<RegionAnalysis> {
+  return postJSON<RegionAnalysis>("/api/analyze", body);
 }

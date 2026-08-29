@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import type { Map as LeafletMap } from "leaflet";
 import { Crosshair, RotateCcw } from "lucide-react";
 import { MAP_DEFAULTS, type LatLngTuple } from "@/lib/mapConfig";
+import { useMapStore } from "@/lib/store";
+import { postAnalyze } from "@/lib/api";
 import type { Region } from "./RegionLayer";
 
 /**
@@ -56,6 +58,17 @@ export function MapStage({ children }: MapStageProps) {
   const handleDrawComplete = useCallback((positions: LatLngTuple[]) => {
     setRegions((prev) => [...prev, { id: `region-${Date.now()}`, positions }]);
     setDrawMode(false);
+
+    const ring = positions.map(([lat, lng]) => [lng, lat]);
+    ring.push(ring[0]);
+    const geometry = { type: "Polygon", coordinates: [ring] };
+
+    useMapStore.getState().setGeometry(geometry);
+    useMapStore.getState().setAnalyzing(true);
+    postAnalyze({ geometry })
+      .then((result) => useMapStore.getState().setRegionResult(result))
+      .catch(() => useMapStore.getState().setRegionResult(null))
+      .finally(() => useMapStore.getState().setAnalyzing(false));
   }, []);
 
   const handleDrawCancel = useCallback(() => {
