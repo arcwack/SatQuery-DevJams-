@@ -1,8 +1,4 @@
-"""LLM service wrapper for SatQuery AI.
-
-Translates raw computed GIS statistics into natural, map-grounded conversational
-answers using the OpenAI chat completions API.
-"""
+"""LLM service wrapper that translates GIS statistics into conversational answers."""
 
 from __future__ import annotations
 
@@ -35,44 +31,38 @@ _client: openai.OpenAI | None = None
 
 
 def _get_client() -> openai.OpenAI:
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise ValueError(
-            "OPENAI_API_KEY is not set. Set it in your environment before calling the "
-            "spatial response generator."
-        )
+    """Return a cached OpenAI client, initializing from OPENAI_API_KEY."""
     global _client
     if _client is None:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY is not set.")
         _client = openai.OpenAI(api_key=api_key)
     return _client
 
 
 def _build_user_prompt(user_query: str, gis_data: dict[str, Any]) -> str:
-    query = user_query.strip() if user_query and user_query.strip() else DEFAULT_PROMPT
-    payload = json.dumps(gis_data, indent=2, default=str)
-    return f"User question:\n{query}\n\nComputed GIS data (JSON):\n{payload}"
+    """Compose the user prompt from the query and serialized GIS data."""
+    query = user_query.strip() or DEFAULT_PROMPT
+    data = json.dumps(gis_data, indent=2, default=str)
+    return f"User question:\n{query}\n\nComputed GIS data (JSON):\n{data}"
 
 
 def generate_spatial_response(
     user_query: str = "", gis_data: dict[str, Any] | None = None
 ) -> str:
-    """Generate a natural-language response for a user query and GIS statistics."""
-    client = _get_client()
-
+    """Return a plain-language answer to user_query grounded in gis_data."""
+    content = _build_user_prompt(user_query, gis_data or {})
     try:
-        completion = client.chat.completions.create(
+        completion = _get_client().chat.completions.create(
             model=MODEL,
             temperature=TEMPERATURE,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": _build_user_prompt(user_query, gis_data or {}),
-                },
+                {"role": "user", "content": content},
             ],
         )
     except openai.OpenAIError as exc:
         logger.error("OpenAI API request failed", exc_info=True)
         raise RuntimeError(f"LLM request failed: {exc}") from exc
-
     return completion.choices[0].message.content or ""
