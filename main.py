@@ -6,12 +6,13 @@ import logging
 from pathlib import Path
 from typing import Any
 
+import httpx
 from fastapi import FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from services import gis_engine, query_engine
+from services import gis_engine, gibs_analyzer, query_engine
 from services.llm_service import generate_spatial_response
 
 logger = logging.getLogger(__name__)
@@ -82,6 +83,27 @@ class QueryResponse(BaseModel):
     highlights: dict[str, Any]
 
 
+class AnalyzeRequest(BaseModel):
+    """Request body for POST /api/analyze."""
+
+    geometry: dict[str, Any] = Field(..., description="GeoJSON polygon in EPSG:4326.")
+    start_date: str | None = Field(default=None, description="ISO date to compare against.")
+    end_date: str | None = Field(default=None, description="ISO date of the current imagery.")
+
+
+class AnalyzeResponse(BaseModel):
+    """Response payload for POST /api/analyze."""
+
+    water_pct: float
+    vegetation_pct: float
+    built_up_pct: float
+    valid_pixels: int
+    start_date: str
+    end_date: str
+    changed: bool
+    change: dict[str, float]
+
+
 def _region_narrative(stats: dict[str, Any]) -> str:
     """Describe vegetation/water cover from raw cover statistics."""
     return (
@@ -139,6 +161,22 @@ def chat(request: AnalysisRequest) -> ChatResponse:
     except (FileNotFoundError, RuntimeError, ValueError) as exc:
         raise _to_http_error(exc) from exc
     return ChatResponse(reply=reply, stats=stats, geometry=request.geometry)
+
+
+@app.post("/api/analyze", response_model=AnalyzeResponse, summary="Analyze a drawn region")
+def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
+    """Classify land cover inside a region from GIBS imagery and flag change."""
+    try:
+        result = gibs_analyzer.analyze_region(
+            request.geometry, request.start_date, request.end_date
+        )
+    except gis_engine.GeometryError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Unable to fetch satellite imagery: {exc}"
+        ) from exc
+    return AnalyzeResponse(**result)
 
 
 @app.post("/api/query", response_model=QueryResponse, summary="Plain-language spatial query")
