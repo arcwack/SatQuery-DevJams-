@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SatQuery AI</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <link rel="stylesheet" href="/style.css?v=2" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>SatQuery AI</h1>
+    <span class="status" id="status">connecting…</span>
+  </header>
+
+  <main class="layout">
+    <aside class="panel">
+      <h2>Ask about this area</h2>
+      <textarea id="query" rows="2" placeholder="e.g. What changed here over time?"></textarea>
+
+      <div class="actions">
+        <button id="btn-chat" disabled>Chat</button>
+        <button id="btn-timeline" disabled>Timeline</button>
+        <button id="btn-summarize" disabled>Summarize</button>
+      </div>
+
+      <div class="layer-toggle">
+        <label><input type="checkbox" id="toggle-classification" checked /> Highlight land cover</label>
+        <div class="legend-inline">
+          <span class="legend-item"><i style="background:#1e5adc"></i>Water</span>
+          <span class="legend-item"><i style="background:#22c55e"></i>Vegetation</span>
+          <span class="legend-item"><i style="background:#dc3c3c"></i>Built-up</span>
+        </div>
+      </div>
+
+      <section class="results" id="results">
+        <p class="hint">1. Draw a polygon inside the green coverage box.<br />2. Ask a question or run a tool.</p>
+      </section>
+
+      <section class="anomalies">
+        <h3>Anomaly Alerts</h3>
+        <ul id="anomaly-list"></ul>
+      </section>
+    </aside>
+
+    <div id="map-wrap">
+      <div id="map"></div>
+      <div class="timeline" id="timeline">
+        <label for="year-slider" id="year-label">Year</label>
+        <input type="range" id="year-slider" min="0" max="0" step="1" value="0" />
+        <div class="timeline-ends"><span id="year-start"></span><span id="year-end"></span></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script src="/app.js?v=3"></script>
+</body>
+</html>
