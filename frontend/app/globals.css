@@ -1,0 +1,283 @@
+@import "tailwindcss";
+
+/* Self-hosted typefaces — no external requests at runtime. */
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+/* Leaflet's base stylesheet — required for tile/pane layout math to work
+   at all. Re-skinned to the void/ink/signal palette below; see the
+   LEAFLET OVERRIDES section. */
+@import "leaflet/dist/leaflet.css";
+
+/* ==========================================================================
+   SATQUERY DESIGN TOKENS
+   Mission-console instrument palette. Two accents only — signal (amber,
+   the primary read-out color) and alert (a muted brick red reserved for
+   anomaly states). Everything else is void/ink grayscale. Deliberately not
+   teal/acid-green: that pairing is the default "AI dashboard" tell.
+   ========================================================================== */
+@theme {
+  /* --- Color: void (background), ink (text), signal + alert (accent) --- */
+  --color-void: #0a0c0e;       /* base background */
+  --color-void-2: #12161a;     /* panel surface */
+  --color-void-3: #1a2027;     /* elevated / hover surface */
+
+  --color-line: #262e35;       /* hairline border, default */
+  --color-line-bright: #3a4550;/* emphasized border, focus/active */
+
+  --color-ink: #ece7db;        /* primary text — warm bone, not pure white */
+  --color-ink-dim: #8d9299;    /* secondary text */
+  --color-ink-faint: #565d64;  /* tertiary / placeholder / disabled */
+
+  --color-signal: #d98f4e;     /* primary accent — thermal/radar amber */
+  --color-signal-dim: #8f6136; /* muted signal, borders / low-emphasis fills */
+  --color-signal-bright: #f0ac6b; /* signal hover / high emphasis */
+
+  --color-alert: #c24b3f;      /* anomaly / error */
+  --color-alert-dim: #7a332b;
+  --color-good: #7a9b76;       /* confirm / success — muted sage, not neon */
+
+  /* --- Typography: three roles, one job each --- */
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* Deliberately uneven scale — not a clean 1.25/1.333 multiplier. */
+  --text-micro: 0.625rem;        /* 10px — mono labels / cursor readouts */
+  --text-micro--line-height: 1.4;
+  --text-caption: 0.75rem;       /* 12px */
+  --text-caption--line-height: 1.45;
+  --text-small: 0.8125rem;       /* 13px */
+  --text-small--line-height: 1.5;
+  --text-body: 0.9375rem;        /* 15px */
+  --text-body--line-height: 1.6;
+  --text-subhead: 1.1875rem;     /* 19px */
+  --text-subhead--line-height: 1.4;
+  --text-section: 1.625rem;      /* 26px */
+  --text-section--line-height: 1.25;
+  --text-display-sm: 2.625rem;   /* 42px */
+  --text-display-sm--line-height: 1.05;
+  --text-display-lg: 4.25rem;    /* 68px */
+  --text-display-lg--line-height: 0.98;
+
+  /* --- Radius: mixed on purpose, not one recipe everywhere --- */
+  --radius-hard: 0px;    /* fixed docks / instrument-panel edges */
+  --radius-soft: 16px;   /* floating glass panels */
+  --radius-pill: 999px;  /* chips / status pills */
+
+  /* --- Motion: one signature curve, shared everywhere unless justified --- */
+  --ease-signature: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Plain custom properties (not Tailwind utility-generating) for values
+   components read directly — durations, texture strength. */
+:root {
+  --noise-opacity: 0.025;
+  --motion-ping: 900ms;
+  --motion-count: 350ms;
+  --motion-panel: 420ms;
+}
+
+/* ==========================================================================
+   BASE RESET
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  position: relative;
+  min-height: 100dvh;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* Tabular figures everywhere numbers read as measurements, not prose. */
+.font-mono,
+[data-numeric="true"] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   NOISE OVERLAY
+   Fixed, tiled, non-interactive grain across the whole app. This single
+   layer does more to break the "flat AI panel" look than any layout choice.
+   ========================================================================== */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: var(--noise-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-repeat: repeat;
+}
+
+/* ==========================================================================
+   SCROLLBAR
+   ========================================================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-bright) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-line-bright);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--color-void);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-signal-dim);
+}
+
+/* ==========================================================================
+   FOCUS
+   Cursor affordances are additive, never load-bearing — every focusable
+   element keeps a real, visible focus ring independent of the custom cursor.
+   ========================================================================== */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 1.5px solid var(--color-signal);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   Scan-beam, radar-ping, count-up and panel motion are all disabled here.
+   State still changes — instantly, without the animated transition.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom cursor replaces the system cursor only on fine-pointer devices.
+   Touch devices keep the native cursor entirely — see Cursor.tsx. */
+@media (hover: hover) and (pointer: fine) {
+  body[data-custom-cursor="true"] {
+    cursor: none;
+  }
+}
+
+/* ==========================================================================
+   LEAFLET OVERRIDES
+   Re-skin Leaflet's default light chrome to the void/ink/signal palette.
+   Zoom controls are custom-built (see MapControls.tsx) instead of using
+   Leaflet's default L.Control.Zoom, so the only stock chrome left to
+   theme here is the tile background and the attribution credit line.
+   ========================================================================== */
+.leaflet-container {
+  background: var(--color-void);
+  font-family: var(--font-mono);
+  outline: none;
+}
+
+/* Slight desaturation/darkening on the imagery itself — keeps true-color
+   satellite tiles from reading as a bright "consumer maps app" surface. */
+.leaflet-tile-pane {
+  filter: saturate(0.85) brightness(0.9);
+}
+
+.leaflet-control-attribution {
+  background: rgb(18 22 26 / 80%);
+  color: var(--color-ink-faint);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-hard);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  padding: 2px 6px;
+  box-shadow: none;
+}
+
+.leaflet-control-attribution a {
+  color: var(--color-ink-dim);
+}
+
+.leaflet-div-icon {
+  background: transparent;
+  border: none;
+}
+
+/* ==========================================================================
+   TIMELINE RANGE
+   Native range input restyled to the instrument language: a hairline track,
+   a void thumb with a signal ring. Fill is painted via inline background.
+   ========================================================================== */
+.timeline-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  outline-offset: 4px;
+}
+
+.timeline-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--color-void);
+  border: 2px solid var(--color-signal);
+  transition: border-color 150ms var(--ease-signature);
+}
+
+.timeline-range::-webkit-slider-thumb:hover {
+  border-color: var(--color-signal-bright);
+}
+
+.timeline-range::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--color-void);
+  border: 2px solid var(--color-signal);
+}
+
+.timeline-range::-moz-range-track {
+  height: 3px;
+  border-radius: var(--radius-pill);
+}
