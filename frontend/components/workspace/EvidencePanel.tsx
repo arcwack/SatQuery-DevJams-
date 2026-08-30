@@ -20,12 +20,14 @@ const CHANGE_ROWS: { key: keyof RegionAnalysis["change"]; label: string }[] = [
 ];
 
 function ChangeRow({ label, value }: { label: string; value: number }) {
-  const tone = value > 0.4 ? "text-good" : value < -0.4 ? "text-alert" : "text-ink-faint";
+  const tone = value > 0.4 ? "text-good" : value < -0.4 ? "text-alert" : "text-ink";
   const sign = value > 0 ? "+" : "";
   return (
     <div className="flex items-baseline justify-between">
-      <span className="font-mono text-micro uppercase tracking-[0.12em] text-ink-faint">{label}</span>
-      <span data-numeric="true" className={`font-mono text-small font-medium ${tone}`}>
+      <span className="font-mono text-caption font-medium uppercase tracking-[0.12em] text-ink-dim">
+        {label}
+      </span>
+      <span data-numeric="true" className={`font-mono text-small font-semibold ${tone}`}>
         {sign}
         {value.toFixed(1)}%
       </span>
@@ -58,7 +60,7 @@ function Summary({ result }: { result: RegionAnalysis }) {
       </div>
 
       <div className="mt-5 border-t border-line pt-4">
-        <Eyebrow tone="dim" className="mb-3">
+        <Eyebrow tone="signal" className="mb-3">
           Change · {result.start_date} → {result.end_date}
         </Eyebrow>
         <div className="flex flex-col gap-2">
@@ -87,13 +89,13 @@ export function EvidencePanel({ open, onClose }: EvidencePanelProps) {
         >
           <GlassPanel variant="soft" scanlines className="flex h-full flex-col">
             <div className="flex shrink-0 items-center justify-between border-b border-line px-4 py-3.5">
-              <Eyebrow tone="dim">Evidence</Eyebrow>
+              <Eyebrow tone="signal">Evidence</Eyebrow>
               <button
                 type="button"
                 onClick={onClose}
                 data-cursor="action"
                 aria-label="Close evidence panel"
-                className="flex h-6 w-6 items-center justify-center rounded-hard text-ink-faint transition-colors hover:text-ink"
+                className="flex h-6 w-6 items-center justify-center rounded-hard text-ink-dim transition-colors hover:text-ink"
               >
                 <X size={14} />
               </button>

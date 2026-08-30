@@ -39,15 +39,15 @@ export function StatBar({
   return (
     <div className={cn("w-full", className)}>
       <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="font-mono text-micro uppercase tracking-[0.12em] text-ink-faint">
+        <span className="font-mono text-caption font-medium uppercase tracking-[0.12em] text-ink-dim">
           {label}
         </span>
-        <span data-numeric="true" className={cn("font-mono text-small font-medium", textColor)}>
+        <span data-numeric="true" className={cn("font-mono text-subhead font-semibold", textColor)}>
           {animated.toFixed(decimals)}
           {unit}
         </span>
       </div>
-      <div className="h-[3px] w-full overflow-hidden rounded-pill bg-void-3">
+      <div className="h-1 w-full overflow-hidden rounded-pill bg-void-3">
         <div
           className={cn("h-full rounded-pill", fillColor)}
           style={{

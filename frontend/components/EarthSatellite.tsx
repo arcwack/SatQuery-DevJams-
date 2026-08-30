@@ -13,13 +13,14 @@ const AMBER = "#f2b632";
 
 const BUS = { w: 170, h: 104, d: 66 };
 
+// Realistic satellite: a gold-foil "bus" body with dark photovoltaic wings.
 const FACES = [
-  { key: "front", w: BUS.w, h: BUS.h, t: `translate(-50%,-50%) translateZ(${BUS.d / 2}px)`, bg: "#1c232c" },
-  { key: "back", w: BUS.w, h: BUS.h, t: `translate(-50%,-50%) rotateY(180deg) translateZ(${BUS.d / 2}px)`, bg: "#10151b" },
-  { key: "left", w: BUS.d, h: BUS.h, t: `translate(-50%,-50%) rotateY(-90deg) translateZ(${BUS.w / 2}px)`, bg: "#151b22" },
-  { key: "right", w: BUS.d, h: BUS.h, t: `translate(-50%,-50%) rotateY(90deg) translateZ(${BUS.w / 2}px)`, bg: "#232b34" },
-  { key: "top", w: BUS.w, h: BUS.d, t: `translate(-50%,-50%) rotateX(90deg) translateZ(${BUS.h / 2}px)`, bg: "#1a222a" },
-  { key: "bottom", w: BUS.w, h: BUS.d, t: `translate(-50%,-50%) rotateX(-90deg) translateZ(${BUS.h / 2}px)`, bg: "#0c1015" },
+  { key: "front", w: BUS.w, h: BUS.h, t: `translate(-50%,-50%) translateZ(${BUS.d / 2}px)`, bg: "linear-gradient(135deg, #d8b24a, #9a7424)" },
+  { key: "back", w: BUS.w, h: BUS.h, t: `translate(-50%,-50%) rotateY(180deg) translateZ(${BUS.d / 2}px)`, bg: "linear-gradient(135deg, #8a6220, #5c4116)" },
+  { key: "left", w: BUS.d, h: BUS.h, t: `translate(-50%,-50%) rotateY(-90deg) translateZ(${BUS.w / 2}px)`, bg: "linear-gradient(135deg, #b8913a, #7c5c1e)" },
+  { key: "right", w: BUS.d, h: BUS.h, t: `translate(-50%,-50%) rotateY(90deg) translateZ(${BUS.w / 2}px)`, bg: "linear-gradient(135deg, #c7a243, #8a6622)" },
+  { key: "top", w: BUS.w, h: BUS.d, t: `translate(-50%,-50%) rotateX(90deg) translateZ(${BUS.h / 2}px)`, bg: "linear-gradient(135deg, #e0be52, #ab7f2b)" },
+  { key: "bottom", w: BUS.w, h: BUS.d, t: `translate(-50%,-50%) rotateX(-90deg) translateZ(${BUS.h / 2}px)`, bg: "linear-gradient(135deg, #6b4d18, #3f2d0d)" },
 ];
 
 const MINT_PATH = "M 40 410 C 180 370, 250 190, 470 130";
@@ -51,7 +52,7 @@ function SolarArray({ side }: { side: "left" | "right" }) {
           top: "50%",
           width: 22,
           height: 4,
-          background: "#2a333c",
+          background: "#3a4550",
           transform: `translate(-50%,-50%) translateX(${sign * (BUS.w / 2 + 11)}px)`,
         }}
       />
@@ -62,9 +63,9 @@ function SolarArray({ side }: { side: "left" | "right" }) {
           top: "50%",
           width: 150,
           height: 190,
-          border: "1px solid rgba(140,255,190,0.28)",
+          border: "1px solid rgba(34,211,238,0.35)",
           background:
-            "linear-gradient(rgba(140,255,190,0.14) 1px, transparent 1px) 0 0 / 12px 12px, linear-gradient(90deg, rgba(140,255,190,0.14) 1px, transparent 1px) 0 0 / 12px 12px, #0d1512",
+            "linear-gradient(rgba(34,211,238,0.20) 1px, transparent 1px) 0 0 / 12px 12px, linear-gradient(90deg, rgba(34,211,238,0.20) 1px, transparent 1px) 0 0 / 12px 12px, linear-gradient(135deg, #0b2447, #071829)",
           transform: `translate(-50%,-50%) translateX(${sign * offset}px) rotateY(90deg) rotateZ(${sign * 3}deg)`,
         }}
       />
