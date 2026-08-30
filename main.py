@@ -87,11 +87,20 @@ class AnomalyResponse(BaseModel):
     zoom_level: int
 
 
+class QueryRequest(BaseModel):
+    """Request body for POST /api/query."""
+
+    geometry: dict[str, Any] = Field(..., description="GeoJSON polygon in EPSG:4326.")
+    query: str = Field(default="", description="Plain-language spatial question.")
+    start_date: str | None = Field(default=None, description="ISO date to compare against.")
+    end_date: str | None = Field(default=None, description="ISO date of the current imagery.")
+
+
 class QueryResponse(BaseModel):
     """Response payload for POST /api/query."""
 
-    reply: str
     intent: str
+    reply: str
     stats: dict[str, Any]
     highlights: dict[str, Any]
 
@@ -246,18 +255,18 @@ def geocode_endpoint(q: str) -> GeocodeResponse:
 
 
 @app.post("/api/query", response_model=QueryResponse, summary="Plain-language spatial query")
-def query(request: AnalysisRequest) -> QueryResponse:
-    """Parse a free-text query into an operation, run it, and return highlights."""
-    if request.start_year > request.end_year:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, "start_year must be less than or equal to end_year."
-        )
+def query(request: QueryRequest) -> QueryResponse:
+    """Resolve a plain-language spatial question and run the right operation."""
     try:
-        result = query_engine.run_query(
-            request.query, request.geometry, request.start_year, request.end_year
+        result = gibs_analyzer.spatial_query(
+            request.geometry, request.query, request.start_date, request.end_date
         )
-    except (FileNotFoundError, RuntimeError, ValueError, gis_engine.GeometryError) as exc:
-        raise _to_http_error(exc) from exc
+    except gis_engine.GeometryError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Unable to fetch satellite imagery: {exc}"
+        ) from exc
     return QueryResponse(**result)
 
 

@@ -330,3 +330,111 @@ def timeline(
     result = analyze_region(geometry, start_date, end_date)
     narrative = _change_narrative(result["start_date"], result["end_date"], result["change"])
     return {"narrative": narrative, **result}
+
+
+# --- Feature 4: plain-language spatial queries ---
+
+WATER_KEYWORDS = ("river", "water", "lake", "sea", "ocean", "coast", "reservoir")
+BUILT_KEYWORDS = ("built", "building", "urban", "construction", "city", "road", "town")
+CHANGE_KEYWORDS = (
+    "change", "changed", "over time", "grew", "grow", "dropped",
+    "increase", "decrease", "different",
+)
+
+
+def _query_intent(query: str) -> str:
+    q = query.lower()
+    has_water = any(k in q for k in WATER_KEYWORDS)
+    has_built = any(k in q for k in BUILT_KEYWORDS)
+    if "near" in q and (has_water or has_built):
+        return "proximity"
+    if any(k in q for k in CHANGE_KEYWORDS):
+        return "change"
+    return "detect"
+
+
+def _dilate(mask: np.ndarray, radius: int) -> np.ndarray:
+    if radius <= 0:
+        return mask
+    out = mask.copy()
+    for dy in range(-radius, radius + 1):
+        for dx in range(-radius, radius + 1):
+            out |= np.roll(np.roll(mask, dy, axis=0), dx, axis=1)
+    return out
+
+
+def _near_water_construction(
+    geometry: dict[str, Any], start_date: str, end_date: str, buffer: int = 3
+) -> dict[str, Any]:
+    """New built-up pixels within a few pixels of water, vs. the start date."""
+    polygon = shape(gis_engine._parse_geometry(geometry))
+    end_rgb, end_mask, transform = _fetch_rgb(polygon, end_date)
+    start_rgb, start_mask, _ = _fetch_rgb(polygon, start_date)
+    _, water_e, built_e, _ = _classify_masks(end_rgb, end_mask)
+    _, _, built_s, _ = _classify_masks(start_rgb, start_mask)
+
+    near_water = _dilate(water_e & end_mask, buffer) & end_mask
+    new_built = built_e & ~built_s & end_mask
+    result = new_built & near_water
+
+    features = _vectorize(result, transform, "new_construction")
+    total = int(end_mask.sum())
+    count = int(result.sum())
+    pct = round(count / total * 100, 1) if total else 0.0
+    reply = (
+        f"Between {start_date} and {end_date}, ~{pct}% of the area shows new "
+        f"construction near water (highlighted)."
+    )
+    return {
+        "intent": "proximity",
+        "reply": reply,
+        "stats": {"new_construction_pixels": count, "new_construction_pct": pct},
+        "highlights": {"type": "FeatureCollection", "features": features},
+    }
+
+
+def _area_change(
+    geometry: dict[str, Any], start_date: str, end_date: str
+) -> dict[str, Any]:
+    """Highlight pixels where built-up gained or vegetation was lost."""
+    polygon = shape(gis_engine._parse_geometry(geometry))
+    end_rgb, end_mask, transform = _fetch_rgb(polygon, end_date)
+    start_rgb, start_mask, _ = _fetch_rgb(polygon, start_date)
+    veg_e, _, built_e, _ = _classify_masks(end_rgb, end_mask)
+    veg_s, _, built_s, _ = _classify_masks(start_rgb, start_mask)
+
+    change_mask = ((built_e & ~built_s) | (veg_s & ~veg_e)) & end_mask
+    features = _vectorize(change_mask, transform, "change")
+
+    end_stats = _classify(end_rgb, end_mask)
+    start_stats = _classify(start_rgb, start_mask)
+    change = {
+        "water": round(float(end_stats["water_pct"]) - float(start_stats["water_pct"]), 1),
+        "vegetation": round(float(end_stats["vegetation_pct"]) - float(start_stats["vegetation_pct"]), 1),
+        "built_up": round(float(end_stats["built_up_pct"]) - float(start_stats["built_up_pct"]), 1),
+    }
+    reply = _change_narrative(start_date, end_date, change)
+    return {
+        "intent": "change",
+        "reply": reply,
+        "stats": change,
+        "highlights": {"type": "FeatureCollection", "features": features},
+    }
+
+
+def spatial_query(
+    geometry: dict[str, Any],
+    query: str = "",
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> dict[str, Any]:
+    """Resolve a plain-language query to a spatial operation and run it."""
+    end_date = end_date or _default_end_date()
+    start_date = start_date or _default_start_date(end_date)
+    intent = _query_intent(query)
+    if intent == "proximity":
+        return _near_water_construction(geometry, start_date, end_date)
+    if intent == "change":
+        return _area_change(geometry, start_date, end_date)
+    result = detect_features(geometry, query, end_date)
+    return {"intent": "detect", **result}
