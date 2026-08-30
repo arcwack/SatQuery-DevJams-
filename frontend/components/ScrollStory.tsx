@@ -19,7 +19,7 @@ const sectionLabels = [
   "SECTION 01 // ORBITAL BRIEF",
   "SECTION 02 // CAPABILITIES",
   "SECTION 03 // USE CASES",
-  "SECTION 04 // ORBITAL BRIEF",
+  "SECTION 04 // PLANETARY SIGNAL",
 ];
 
 export function ScrollSection({ index, label, children, className = "" }: ScrollSectionProps) {

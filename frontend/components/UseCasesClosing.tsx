@@ -34,15 +34,27 @@ export function UseCasesClosing() {
         </motion.div>
       </section>
 
-      <section id="section-04" className="relative flex min-h-[78svh] items-center justify-center overflow-hidden px-6 py-28 text-center sm:px-10">
-        <div className="pointer-events-none absolute left-1/2 top-1/2 size-[min(72vw,620px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#d9f3ff]/20" aria-hidden="true" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 size-[min(50vw,420px)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#d9f3ff]/10" aria-hidden="true" />
-        <div className="relative z-10 max-w-2xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">SECTION 04 // ORBITAL BRIEF</p>
-          <h2 className="mt-5 font-display text-5xl font-semibold uppercase leading-[0.9] tracking-[-0.06em] text-ink sm:text-7xl">Ask the earth.</h2>
-          <p className="mx-auto mt-6 max-w-md text-small leading-relaxed text-ink-dim">Turn satellite imagery into a clear answer about the place and change you need to understand.</p>
-          <Link href="/workspace" data-cursor="action" className="mt-8 inline-flex items-center gap-2 rounded-hard bg-[#8CFFBE] px-5 py-3 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[#05070b] transition-colors duration-150 hover:bg-white">Enter workspace →</Link>
-        </div>
+      <section id="section-04" className="relative px-6 pb-24 pt-28 sm:px-10">
+        <motion.div className="mx-auto w-full max-w-6xl" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.6 }}>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">SECTION 04 // PLANETARY SIGNAL</p>
+          <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.2em] text-signal">Did you know?</p>
+          <h2 className="mt-4 font-display text-5xl font-semibold uppercase leading-[0.92] tracking-[-0.06em] text-ink sm:text-6xl">Our changing planet</h2>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["90% of the Aral Sea", "The Aral Sea has lost roughly 90% of its volume since the 1960s — one of the fastest human-driven environmental changes ever filmed from space."],
+              ["705 km up", "Sun-synchronous satellites orbit about 705 km above the surface, circling the planet roughly every 90 minutes."],
+              ["A planet a day", "A single satellite can image the entire Earth in one day — enough to watch seasons shift and cities sprawl."],
+              ["Green from orbit", "NDVI measures plant health from space: healthy vegetation reflects near-infrared strongly, so forests glow green in the data."],
+              ["Meters, not guesses", "Modern sensors resolve features just a few metres across — a new construction site is visible within months, not years."],
+              ["Cloud-free composites", "Satellites combine many passes to strip out clouds, giving clean, comparable images of the same place over decades."],
+            ].map(([title, body]) => (
+              <article key={title} className="rounded-soft border border-line bg-void-2/70 p-5 backdrop-blur-sm">
+                <h3 className="font-display text-subhead font-semibold text-ink">{title}</h3>
+                <p className="mt-2 text-small leading-relaxed text-ink-dim">{body}</p>
+              </article>
+            ))}
+          </div>
+        </motion.div>
       </section>
 
       <footer className="flex flex-col gap-5 border-t border-line px-6 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-10">
