@@ -447,3 +447,71 @@ def overlay_near_water_change(
     end_date = end_date or _default_end_date()
     start_date = start_date or _default_start_date(end_date)
     return _near_water_construction(geometry, start_date, end_date)
+
+
+def rank_features(
+    geometry: dict[str, Any], class_name: str = "water", date_str: str | None = None, top_n: int = 5
+) -> dict[str, Any]:
+    """Detect connected features of a class, rank them by area, name best-effort."""
+    from services import geocoder
+
+    polygon = shape(gis_engine._parse_geometry(geometry))
+    date_str = date_str or _default_end_date()
+    rgb, mask, transform = _fetch_rgb(polygon, date_str)
+    veg, water, built_up, _ = _classify_masks(rgb, mask)
+    class_mask = {"water": water, "vegetation": veg, "built_up": built_up}[class_name] & mask
+
+    geoms = [
+        shape(geom)
+        for geom, value in raster_shapes(class_mask.astype(np.uint8), transform=transform)
+        if value
+    ]
+    mean_lat = polygon.centroid.y
+    scale = 111.32 * 110.57 * math.cos(math.radians(mean_lat))  # km^2 per deg^2
+
+    rankable = []
+    for geom in geoms:
+        area_km2 = geom.area * scale
+        if area_km2 < 0.5:
+            continue
+        point = geom.representative_point() if not geom.is_empty else geom.centroid
+        rankable.append({"geom": geom, "area": area_km2, "point": point})
+    rankable.sort(key=lambda item: item["area"], reverse=True)
+    rankable = rankable[:top_n]
+
+    label = class_name.replace("_", " ")
+    features = []
+    ranked = []
+    for idx, item in enumerate(rankable, 1):
+        name = None
+        if idx <= 3:  # best-effort names for the biggest few
+            try:
+                result = geocoder.reverse_geocode(item["point"].y, item["point"].x)
+                if result and result["label"]:
+                    name = result["label"].split(",")[0]
+            except Exception:
+                name = None
+        ranked.append(
+            {"name": name or f"Unnamed {label} {idx}", "area_km2": round(item["area"], 1)}
+        )
+        features.append(
+            {
+                "type": "Feature",
+                "properties": {"class": class_name},
+                "geometry": mapping(item["geom"].simplify(0.0006, preserve_topology=True)),
+            }
+        )
+
+    if not ranked:
+        reply = f"No significant {label} features were found in this region."
+    else:
+        lines = "\n".join(
+            f"{i}. {r['name']} — approx {r['area_km2']} km²" for i, r in enumerate(ranked, 1)
+        )
+        reply = f"In this region I found {len(ranked)} {label} feature(s), ranked by size:\n{lines}"
+
+    return {
+        "reply": reply,
+        "stats": {"count": len(ranked), "ranked": ranked},
+        "highlights": {"type": "FeatureCollection", "features": features},
+    }

@@ -40,3 +40,20 @@ def geocode(query: str) -> dict[str, Any] | None:
         "lon": lon,
         "bounds": bounds,
     }
+
+
+def reverse_geocode(lat: float, lon: float, zoom: int = 10) -> dict[str, Any] | None:
+    """Resolve a coordinate to the nearest named feature (best-effort)."""
+    resp = _client.get(
+        "https://nominatim.openstreetmap.org/reverse",
+        params={"lat": lat, "lon": lon, "format": "jsonv2", "zoom": zoom},
+        headers={"User-Agent": USER_AGENT},
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    if not data:
+        return None
+    return {
+        "label": data.get("display_name", ""),
+        "type": data.get("type", ""),
+    }

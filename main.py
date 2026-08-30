@@ -305,16 +305,39 @@ def _dispatch_decision(decision: dict[str, Any], request: QueryRequest) -> dict[
         result = gibs_analyzer.overlay_near_water_change(geometry, start_date, end_date)
         return {"intent": "overlay", "reply": result["reply"], "stats": result["stats"], "highlights": result["highlights"]}
 
+    if operation == "list":
+        cls = classes[0] if classes else "water"
+        result = gibs_analyzer.rank_features(geometry, cls, end_date)
+        return {"intent": "list", "reply": result["reply"], "stats": result["stats"], "highlights": result["highlights"]}
+
     # detect / quantify (and the default): classify + highlight the relevant classes
     result = gibs_analyzer.detect_features(geometry, request.query, end_date)
     return {"intent": operation, "reply": result["reply"], "stats": result["stats"], "highlights": result["highlights"]}
+
+
+def _forced_operation(query: str) -> dict[str, Any] | None:
+    """Deterministic safety net: force a 'list' of a class when the user asks to name/rank it."""
+    q = query.lower()
+    wants_list = any(k in q for k in ("name", "list", "rank", "biggest", "largest", "smallest", "sort"))
+    water = any(k in q for k in ("water", "lake", "river", "sea", "ocean", "pond", "reservoir"))
+    vegetation = any(k in q for k in ("forest", "tree", "vegetation", "green"))
+    built = any(k in q for k in ("built", "urban", "city", "building", "construction"))
+    if not wants_list:
+        return None
+    if water:
+        return {"operation": "list", "classes": ["water"], "start_date": None, "end_date": None}
+    if vegetation:
+        return {"operation": "list", "classes": ["vegetation"], "start_date": None, "end_date": None}
+    if built:
+        return {"operation": "list", "classes": ["built_up"], "start_date": None, "end_date": None}
+    return None
 
 
 @app.post("/api/query", response_model=QueryResponse, summary="Plain-language spatial query")
 def query(request: QueryRequest) -> QueryResponse:
     """Interpret a plain-language spatial question (LLM + guardrails) and run it."""
     try:
-        decision = llm_service.interpret_query(request.query)
+        decision = _forced_operation(request.query) or llm_service.interpret_query(request.query)
         result = _dispatch_decision(decision, request)
     except (RuntimeError, ValueError):
         # LLM unavailable — fall back to the deterministic intent parser.
