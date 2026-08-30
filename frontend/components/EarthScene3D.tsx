@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import * as THREE from "three";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Stars } from "@react-three/drei";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { SatelliteBackdrop } from "@/components/SatelliteBackdrop";
+import { SpaceBackdrop } from "@/components/SpaceBackdrop";
 
 /**
  * Interactive 3D hero: a wireframe / low-poly Earth with a fresnel
@@ -57,8 +57,15 @@ const atmosphereFragment = /* glsl */ `
   }
 `;
 
+const EARTH_TEXTURES = [
+  "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
+  "https://threejs.org/examples/textures/planets/earth_normal_2048.jpg",
+  "https://threejs.org/examples/textures/planets/earth_specular_2048.jpg",
+];
+
 function Earth({ progress }: { progress: React.RefObject<number> }) {
   const group = React.useRef<THREE.Group>(null);
+  const [colorMap, normalMap, specularMap] = useLoader(THREE.TextureLoader, EARTH_TEXTURES);
 
   useFrame((_, delta) => {
     if (!group.current) return;
@@ -67,27 +74,17 @@ function Earth({ progress }: { progress: React.RefObject<number> }) {
 
   return (
     <group ref={group} rotation={[0.35, 0, 0.12]}>
-      {/* Solid faceted core */}
+      {/* 2K public-domain-style Three.js example maps: color, terrain relief, ocean gloss. */}
       <mesh>
-        <icosahedronGeometry args={[EARTH_RADIUS, 3]} />
-        <meshStandardMaterial
-          color={DEEP}
-          flatShading
-          metalness={0.1}
-          roughness={0.85}
+        <sphereGeometry args={[EARTH_RADIUS, 64, 48]} />
+        <meshPhongMaterial
+          map={colorMap}
+          bumpMap={normalMap}
+          bumpScale={0.045}
+          specularMap={specularMap}
+          specular={new THREE.Color("#9cc5c8")}
+          shininess={18}
         />
-      </mesh>
-
-      {/* Wireframe shell — the technical-schematic read */}
-      <mesh scale={1.004}>
-        <icosahedronGeometry args={[EARTH_RADIUS, 4]} />
-        <meshBasicMaterial color={MINT} wireframe transparent opacity={0.22} />
-      </mesh>
-
-      {/* Latitude/longitude reference cage */}
-      <mesh scale={1.02}>
-        <sphereGeometry args={[EARTH_RADIUS, 24, 16]} />
-        <meshBasicMaterial color={MINT} wireframe transparent opacity={0.07} />
       </mesh>
 
       {/* Atmosphere halo */}
@@ -219,8 +216,9 @@ function Scene({ progress }: { progress: React.RefObject<number> }) {
       <ambientLight intensity={0.35} />
       <directionalLight position={[-4, 2, 5]} intensity={1.6} color="#eaf6ff" />
       <directionalLight position={[3, -1, -2]} intensity={0.3} color={MINT} />
-      <Stars radius={80} depth={40} count={1400} factor={2.6} saturation={0} fade speed={0.4} />
-      <Earth progress={progress} />
+      <React.Suspense fallback={null}>
+        <Earth progress={progress} />
+      </React.Suspense>
       <Satellite progress={progress} />
       <CameraRig progress={progress} />
     </>
@@ -266,14 +264,14 @@ export function EarthScene3D() {
   if (!enabled) return <SatelliteBackdrop />;
 
   return (
-    <div className="fixed inset-0 bg-[#05070b]" aria-hidden="true">
+    <div className="fixed inset-0" aria-hidden="true">
+      <SpaceBackdrop />
       <Canvas
         camera={{ position: [0, 0.5, 6.4], fov: 45 }}
         dpr={[1, 1.8]}
-        gl={{ antialias: true, alpha: false }}
+        gl={{ antialias: true, alpha: true }}
       >
-        <color attach="background" args={["#05070b"]} />
-        <fog attach="fog" args={["#05070b", 9, 18]} />
+        <fog attach="fog" args={["#080b14", 9, 18]} />
         <Scene progress={progress} />
       </Canvas>
 

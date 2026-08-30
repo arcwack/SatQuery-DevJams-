@@ -177,7 +177,16 @@ body::before {
   border-radius: 2px;
 }
 
-/* ==========================================================================
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.9; }
+}
+
+.animate-star-twinkle {
+  animation: star-twinkle 6s ease-in-out infinite;
+}
+
+/* ============================================================================
    REDUCED MOTION
    Scan-beam, radar-ping, count-up and panel motion are all disabled here.
    State still changes — instantly, without the animated transition.
