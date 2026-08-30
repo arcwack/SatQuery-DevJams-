@@ -438,3 +438,12 @@ def spatial_query(
         return _area_change(geometry, start_date, end_date)
     result = detect_features(geometry, query, end_date)
     return {"intent": "detect", **result}
+
+
+def overlay_near_water_change(
+    geometry: dict[str, Any], start_date: str | None = None, end_date: str | None = None
+) -> dict[str, Any]:
+    """Multi-step overlay: built-up change within a few pixels of water."""
+    end_date = end_date or _default_end_date()
+    start_date = start_date or _default_start_date(end_date)
+    return _near_water_construction(geometry, start_date, end_date)

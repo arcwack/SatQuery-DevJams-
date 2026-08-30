@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from services import gis_engine, gibs_analyzer, geocoder, query_engine
+from services import llm_service
 from services.llm_service import generate_spatial_response
 
 logger = logging.getLogger(__name__)
@@ -254,10 +255,69 @@ def geocode_endpoint(q: str) -> GeocodeResponse:
     return GeocodeResponse(**result)
 
 
+def _empty_highlights() -> dict[str, Any]:
+    return {"type": "FeatureCollection", "features": []}
+
+
+def _dispatch_decision(decision: dict[str, Any], request: QueryRequest) -> dict[str, Any]:
+    """Run the operation the LLM chose, enforcing guardrails."""
+    operation = decision.get("operation", "detect")
+    if operation == "reject":
+        return {
+            "intent": "reject",
+            "reply": decision.get("message") or llm_service.REJECTION,
+            "stats": {},
+            "highlights": _empty_highlights(),
+        }
+    if operation == "unsupported":
+        reason = decision.get("reason", "that query is outside supported analysis.")
+        return {
+            "intent": "unsupported",
+            "reply": f"I can't analyze that: {reason}",
+            "stats": {},
+            "highlights": _empty_highlights(),
+        }
+
+    geometry = request.geometry
+    start_date = request.start_date or decision.get("start_date")
+    end_date = request.end_date or decision.get("end_date")
+    classes = decision.get("classes") or []
+
+    if operation == "change":
+        result = gibs_analyzer.timeline(geometry, start_date, end_date)
+        return {
+            "intent": "change",
+            "reply": result["narrative"],
+            "stats": {"change": result["change"], "changed": result["changed"]},
+            "highlights": _empty_highlights(),
+        }
+    if operation == "summary":
+        result = gibs_analyzer.analyze_region(geometry, start_date, end_date)
+        return {
+            "intent": "summary",
+            "reply": gibs_analyzer._change_narrative(
+                result["start_date"], result["end_date"], result["change"]
+            ),
+            "stats": result,
+            "highlights": _empty_highlights(),
+        }
+    if operation == "overlay" and "water" in classes:
+        result = gibs_analyzer.overlay_near_water_change(geometry, start_date, end_date)
+        return {"intent": "overlay", "reply": result["reply"], "stats": result["stats"], "highlights": result["highlights"]}
+
+    # detect / quantify (and the default): classify + highlight the relevant classes
+    result = gibs_analyzer.detect_features(geometry, request.query, end_date)
+    return {"intent": operation, "reply": result["reply"], "stats": result["stats"], "highlights": result["highlights"]}
+
+
 @app.post("/api/query", response_model=QueryResponse, summary="Plain-language spatial query")
 def query(request: QueryRequest) -> QueryResponse:
-    """Resolve a plain-language spatial question and run the right operation."""
+    """Interpret a plain-language spatial question (LLM + guardrails) and run it."""
     try:
+        decision = llm_service.interpret_query(request.query)
+        result = _dispatch_decision(decision, request)
+    except (RuntimeError, ValueError):
+        # LLM unavailable — fall back to the deterministic intent parser.
         result = gibs_analyzer.spatial_query(
             request.geometry, request.query, request.start_date, request.end_date
         )
