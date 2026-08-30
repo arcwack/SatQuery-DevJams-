@@ -31,8 +31,8 @@ function clamp01(v: number) {
 
 /** Fresnel rim shader for the atmospheric halo (rendered on the back side). */
 const atmosphereUniforms = {
-  uColor: { value: new THREE.Color("#d9f3ff") },
-  uIntensity: { value: 0.28 },
+  uColor: { value: new THREE.Color("#8ed9ef") },
+  uIntensity: { value: 1.05 },
 };
 
 const atmosphereVertex = /* glsl */ `
@@ -52,7 +52,7 @@ const atmosphereFragment = /* glsl */ `
   varying vec3 vNormal;
   varying vec3 vView;
   void main() {
-    float f = pow(1.0 - abs(dot(vNormal, vView)), 3.0);
+    float f = pow(1.0 - abs(dot(vNormal, vView)), 2.05);
     gl_FragColor = vec4(uColor, f * uIntensity);
   }
 `;
@@ -87,8 +87,20 @@ function Earth({ progress }: { progress: React.RefObject<number> }) {
         />
       </mesh>
 
-      {/* Atmosphere halo */}
+      {/* Soft blue atmospheric halo: a tight limb plus a broad diffuse bloom. */}
       <mesh scale={1.07}>
+        <sphereGeometry args={[EARTH_RADIUS, 48, 48]} />
+        <shaderMaterial
+          uniforms={atmosphereUniforms}
+          vertexShader={atmosphereVertex}
+          fragmentShader={atmosphereFragment}
+          side={THREE.BackSide}
+          blending={THREE.AdditiveBlending}
+          transparent
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh scale={1.21}>
         <sphereGeometry args={[EARTH_RADIUS, 48, 48]} />
         <shaderMaterial
           uniforms={atmosphereUniforms}
