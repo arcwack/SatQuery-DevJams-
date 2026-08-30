@@ -12,7 +12,8 @@ export function SatelliteBackdrop() {
         alt=""
         loading="eager"
         fetchPriority="high"
-        className="h-full w-full object-cover object-center"
+        className="h-full w-full object-contain"
+        style={{ transform: "scale(0.95)" }}
       />
 
       {/* Dark film overlay so the headline reads clearly */}
