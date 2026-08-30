@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from services import gis_engine, gibs_analyzer, query_engine
+from services import gis_engine, gibs_analyzer, geocoder, query_engine
 from services.llm_service import generate_spatial_response
 
 logger = logging.getLogger(__name__)
@@ -133,6 +133,15 @@ class DetectResponse(BaseModel):
     highlights: dict[str, Any]
 
 
+class GeocodeResponse(BaseModel):
+    """Response payload for GET /api/geocode."""
+
+    label: str
+    lat: float
+    lon: float
+    bounds: list[list[float]] | None
+
+
 def _region_narrative(stats: dict[str, Any]) -> str:
     """Describe vegetation/water cover from raw cover statistics."""
     return (
@@ -220,6 +229,20 @@ def detect(request: DetectRequest) -> DetectResponse:
             status.HTTP_502_BAD_GATEWAY, f"Unable to fetch satellite imagery: {exc}"
         ) from exc
     return DetectResponse(**result)
+
+
+@app.get("/api/geocode", response_model=GeocodeResponse, summary="Geocode a place name")
+def geocode_endpoint(q: str) -> GeocodeResponse:
+    """Resolve a country, city, or place name to a map location."""
+    try:
+        result = geocoder.geocode(q)
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Geocoding failed: {exc}"
+        ) from exc
+    if result is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"No location found for '{q}'.")
+    return GeocodeResponse(**result)
 
 
 @app.post("/api/query", response_model=QueryResponse, summary="Plain-language spatial query")
