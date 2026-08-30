@@ -29,34 +29,6 @@ function clamp01(v: number) {
   return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
-/** Fresnel rim shader for the atmospheric halo (rendered on the back side). */
-const atmosphereUniforms = {
-  uColor: { value: new THREE.Color("#8ed9ef") },
-  uIntensity: { value: 1.05 },
-};
-
-const atmosphereVertex = /* glsl */ `
-  varying vec3 vNormal;
-  varying vec3 vView;
-  void main() {
-    vNormal = normalize(normalMatrix * normal);
-    vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    vView = normalize(-mv.xyz);
-    gl_Position = projectionMatrix * mv;
-  }
-`;
-
-const atmosphereFragment = /* glsl */ `
-  uniform vec3 uColor;
-  uniform float uIntensity;
-  varying vec3 vNormal;
-  varying vec3 vView;
-  void main() {
-    float f = pow(1.0 - abs(dot(vNormal, vView)), 2.05);
-    gl_FragColor = vec4(uColor, f * uIntensity);
-  }
-`;
-
 const EARTH_TEXTURES = [
   "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
   "https://threejs.org/examples/textures/planets/earth_normal_2048.jpg",
@@ -84,32 +56,6 @@ function Earth({ progress }: { progress: React.RefObject<number> }) {
           specularMap={specularMap}
           specular={new THREE.Color("#9cc5c8")}
           shininess={18}
-        />
-      </mesh>
-
-      {/* Soft blue atmospheric halo: a tight limb plus a broad diffuse bloom. */}
-      <mesh scale={1.07}>
-        <sphereGeometry args={[EARTH_RADIUS, 48, 48]} />
-        <shaderMaterial
-          uniforms={atmosphereUniforms}
-          vertexShader={atmosphereVertex}
-          fragmentShader={atmosphereFragment}
-          side={THREE.BackSide}
-          blending={THREE.AdditiveBlending}
-          transparent
-          depthWrite={false}
-        />
-      </mesh>
-      <mesh scale={1.21}>
-        <sphereGeometry args={[EARTH_RADIUS, 48, 48]} />
-        <shaderMaterial
-          uniforms={atmosphereUniforms}
-          vertexShader={atmosphereVertex}
-          fragmentShader={atmosphereFragment}
-          side={THREE.BackSide}
-          blending={THREE.AdditiveBlending}
-          transparent
-          depthWrite={false}
         />
       </mesh>
 
