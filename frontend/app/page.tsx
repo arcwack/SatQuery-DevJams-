@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EarthScene3D } from "@/components/EarthScene3D";
 import { LiveCoordinates } from "@/components/LiveCoordinates";
+import { ScrollSection, ScrollStory } from "@/components/ScrollStory";
 import { Eyebrow } from "@/components/system/Eyebrow";
 
 const FUN_FACTS = [
@@ -31,47 +32,55 @@ export default function Home() {
           <LiveCoordinates />
         </header>
 
-        {/* Hero */}
-        <section className="flex min-h-[calc(100svh-3rem)] items-center px-6 sm:px-10">
-          <div className="max-w-xl">
-            <p className="text-small leading-relaxed text-ink">
-              Ask questions about satellite imagery. Get answers directly on the map.
-            </p>
-            <Link
-              href="/workspace"
-              data-cursor="action"
-              className="mt-5 inline-flex items-center gap-2 rounded-hard bg-[#8CFFBE] px-5 py-3 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[#05070b] transition-colors duration-150 hover:bg-white"
-            >
-              Enter workspace →
-            </Link>
-            <h1 className="mt-8 font-display text-4xl font-semibold uppercase leading-[1.02] tracking-tight text-ink sm:text-5xl lg:text-6xl">
-              Talk to the earth.
-              <br />
-              Understand
-              <br />
-              the change.
-            </h1>
-          </div>
-        </section>
-
-        {/* Fun facts */}
-        <section className="px-6 pb-24 pt-12 sm:px-10">
-          <Eyebrow tone="signal">Did you know?</Eyebrow>
-          <h2 className="mt-4 font-display text-section font-semibold text-ink">
-            Our changing planet
-          </h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FUN_FACTS.map((fact) => (
-              <article
-                key={fact.title}
-                className="rounded-soft border border-line bg-void-2/70 p-5 backdrop-blur-sm"
+        <ScrollStory>
+          {/* Hero / section 01 */}
+          <ScrollSection index={1} label="SECTION 01 // ORBITAL BRIEF" className="min-h-[calc(100svh-3rem)] pt-8">
+            <div className="max-w-xl">
+              <p className="text-small leading-relaxed text-ink">
+                Ask questions about satellite imagery. Get answers directly on the map.
+              </p>
+              <Link
+                href="/workspace"
+                data-cursor="action"
+                className="mt-5 inline-flex items-center gap-2 rounded-hard bg-[#8CFFBE] px-5 py-3 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[#05070b] transition-colors duration-150 hover:bg-white"
               >
-                <h3 className="font-display text-subhead font-semibold text-ink">{fact.title}</h3>
-                <p className="mt-2 text-small leading-relaxed text-ink-dim">{fact.body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
+                Enter workspace →
+              </Link>
+              <h1 className="mt-8 font-display text-4xl font-semibold uppercase leading-[1.02] tracking-tight text-ink sm:text-5xl lg:text-6xl">
+                Talk to the earth.
+                <br />
+                Understand
+                <br />
+                the change.
+              </h1>
+            </div>
+          </ScrollSection>
+
+          <ScrollSection index={2} label="SECTION 02 // CORE DEMO" />
+          <ScrollSection index={3} label="SECTION 03 // CHANGE DETECTION" />
+          <ScrollSection index={4} label="SECTION 04 // GROUND TRUTH" />
+
+          {/* Fun facts / section 05 */}
+          <ScrollSection index={5} label="SECTION 05 // PLANETARY SIGNAL" className="items-start pt-24">
+            <div className="w-full">
+              <Eyebrow tone="signal">Did you know?</Eyebrow>
+              <h2 className="mt-4 font-display text-section font-semibold text-ink">
+                Our changing planet
+              </h2>
+              <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {FUN_FACTS.map((fact) => (
+                  <article
+                    key={fact.title}
+                    className="rounded-soft border border-line bg-void-2/70 p-5 backdrop-blur-sm"
+                  >
+                    <h3 className="font-display text-subhead font-semibold text-ink">{fact.title}</h3>
+                    <p className="mt-2 text-small leading-relaxed text-ink-dim">{fact.body}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </ScrollSection>
+        </ScrollStory>
 
         {/* Corner telemetry */}
         <footer className="flex items-end justify-between px-6 pb-6 sm:px-10">
