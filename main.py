@@ -50,12 +50,25 @@ class ChatResponse(BaseModel):
     geometry: dict[str, Any]
 
 
+class TimelineRequest(BaseModel):
+    """Request body for POST /api/timeline."""
+
+    geometry: dict[str, Any] = Field(..., description="GeoJSON polygon in EPSG:4326.")
+    start_date: str | None = Field(default=None, description="ISO date to compare against.")
+    end_date: str | None = Field(default=None, description="ISO date of the current imagery.")
+
+
 class TimelineResponse(BaseModel):
     """Response payload for POST /api/timeline."""
 
     narrative: str
-    diff: dict[str, Any]
-    geometry: dict[str, Any]
+    start_date: str
+    end_date: str
+    water_pct: float
+    vegetation_pct: float
+    built_up_pct: float
+    changed: bool
+    change: dict[str, float]
 
 
 class RegionSummaryResponse(BaseModel):
@@ -230,25 +243,19 @@ def query(request: AnalysisRequest) -> QueryResponse:
     response_model=TimelineResponse,
     summary="Historical Timeline & Change Detection",
 )
-def timeline(request: AnalysisRequest) -> TimelineResponse:
-    """Summarize vegetation/water change between start_year and end_year."""
-    if request.start_year > request.end_year:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, "start_year must be less than or equal to end_year."
-        )
+def timeline(request: TimelineRequest) -> TimelineResponse:
+    """Compare land cover between two GIBS dates and narrate the change."""
     try:
-        diff = gis_engine.compute_temporal_change(
-            request.geometry, request.start_year, request.end_year
+        result = gibs_analyzer.timeline(
+            request.geometry, request.start_date, request.end_date
         )
-        narrative = generate_spatial_response(
-            f"Summarize how vegetation and water cover changed between "
-            f"{request.start_year} and {request.end_year}. State clearly whether "
-            f"each increased or decreased.",
-            diff,
-        )
-    except (FileNotFoundError, RuntimeError, ValueError) as exc:
-        raise _to_http_error(exc) from exc
-    return TimelineResponse(narrative=narrative, diff=diff, geometry=request.geometry)
+    except gis_engine.GeometryError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Unable to fetch satellite imagery: {exc}"
+        ) from exc
+    return TimelineResponse(**result)
 
 
 @app.post(

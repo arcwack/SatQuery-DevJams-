@@ -307,3 +307,26 @@ def detect_features(
         },
         "highlights": {"type": "FeatureCollection", "features": features},
     }
+
+
+CHANGE_ORDER = (("vegetation", "Vegetation"), ("water", "Water"), ("built_up", "built-up land"))
+
+
+def _change_narrative(start_date: str, end_date: str, change: dict[str, float]) -> str:
+    parts = []
+    for cls, label in CHANGE_ORDER:
+        value = change.get(cls, 0)
+        if abs(value) >= 1:
+            parts.append(f"{label} {'grew' if value > 0 else 'dropped'} {abs(value):.1f}%")
+    if not parts:
+        return f"Land cover remained largely stable between {start_date} and {end_date}."
+    return f"Between {start_date} and {end_date}, " + ", ".join(parts) + "."
+
+
+def timeline(
+    geometry: dict[str, Any], start_date: str | None = None, end_date: str | None = None
+) -> dict[str, Any]:
+    """Compare a polygon at two dates and return the change, plus a narration."""
+    result = analyze_region(geometry, start_date, end_date)
+    narrative = _change_narrative(result["start_date"], result["end_date"], result["change"])
+    return {"narrative": narrative, **result}
