@@ -33,7 +33,7 @@ export default function Home() {
           <Link
             href="/workspace"
             data-cursor="action"
-            className="mt-5 inline-flex items-center gap-2 rounded-hard bg-[#8CFFBE] px-5 py-3 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[#05070b] transition-colors duration-150 hover:bg-white"
+            className="mt-5 inline-flex items-center gap-2 rounded-hard bg-[#00E5FF] px-5 py-3 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-[#03151B] transition-colors duration-150 hover:bg-[#7FF7FF]"
           >
             Enter workspace →
           </Link>
@@ -54,10 +54,10 @@ export default function Home() {
 
       {/* Corner telemetry */}
       <footer className="relative z-10 flex items-end justify-between px-6 pb-6 sm:px-10">
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#8CFFBE]/70">
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#00E5FF]/70">
           Scanning · Grid 478
         </span>
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#8CFFBE]/70">
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#00E5FF]/70">
           NDVI Anomaly +0.14
         </span>
       </footer>

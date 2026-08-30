@@ -85,7 +85,7 @@ export function MapStage({ children }: MapStageProps) {
         className="pointer-events-none absolute inset-0 z-10 opacity-[0.06]"
         style={{
           backgroundImage:
-            "linear-gradient(to right, var(--color-line) 1px, transparent 1px), linear-gradient(to bottom, var(--color-line) 1px, transparent 1px)",
+            "linear-gradient(to right, var(--color-grid) 1px, transparent 1px), linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px)",
           backgroundSize: "56px 56px",
         }}
       />

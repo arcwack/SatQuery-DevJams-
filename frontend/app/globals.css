@@ -24,24 +24,25 @@
    ========================================================================== */
 @theme {
   /* --- Color: void (background), ink (text), signal + alert (accent) --- */
-  --color-void: #0a0c0e;       /* base background */
-  --color-void-2: #12161a;     /* panel surface */
-  --color-void-3: #1a2027;     /* elevated / hover surface */
+  --color-void: #03151B;       /* main background — very dark blue/black */
+  --color-void-2: #05232A;     /* panel surface — dark teal-blue */
+  --color-void-3: #07313A;     /* elevated / hover surface — slightly lighter */
 
-  --color-line: #262e35;       /* hairline border, default */
-  --color-line-bright: #3a4550;/* emphasized border, focus/active */
+  --color-line: #00D9E8;       /* hairline border — cyan */
+  --color-line-bright: #7FF7FF;/* emphasized border, focus/active */
+  --color-grid: #0A3B43;       /* background grid lines — very dark cyan */
 
-  --color-ink: #ece7db;        /* primary text — warm bone, not pure white */
-  --color-ink-dim: #8d9299;    /* secondary text */
-  --color-ink-faint: #565d64;  /* tertiary / placeholder / disabled */
+  --color-ink: #00E5FF;        /* primary text — bright cyan */
+  --color-ink-dim: #58BFC8;    /* secondary text — muted cyan */
+  --color-ink-faint: #16808B;  /* tertiary / placeholder / disabled — dim cyan */
 
-  --color-signal: #d98f4e;     /* primary accent — thermal/radar amber */
-  --color-signal-dim: #8f6136; /* muted signal, borders / low-emphasis fills */
-  --color-signal-bright: #f0ac6b; /* signal hover / high emphasis */
+  --color-signal: #00E5FF;     /* primary accent — icons / glow */
+  --color-signal-dim: #16808B; /* muted signal — dark/muted cyan */
+  --color-signal-bright: #7FF7FF; /* signal hover / high emphasis */
 
-  --color-alert: #c24b3f;      /* anomaly / error */
-  --color-alert-dim: #7a332b;
-  --color-good: #7a9b76;       /* confirm / success — muted sage, not neon */
+  --color-alert: #FF5E78;      /* anomaly / error — warm magenta for contrast */
+  --color-alert-dim: #A23A50;
+  --color-good: #4DD08A;       /* confirm / success — mint */
 
   /* --- Typography: three roles, one job each --- */
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
