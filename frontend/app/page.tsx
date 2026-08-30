@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { SatelliteBackdrop } from "@/components/SatelliteBackdrop";
+import { EarthScene3D } from "@/components/EarthScene3D";
+import { LiveCoordinates } from "@/components/LiveCoordinates";
 import { Eyebrow } from "@/components/system/Eyebrow";
 
 const FUN_FACTS = [
@@ -14,7 +15,7 @@ const FUN_FACTS = [
 export default function Home() {
   return (
     <main className="relative min-h-dvh overflow-x-hidden bg-void text-ink">
-      <SatelliteBackdrop />
+      <EarthScene3D />
 
       <div className="relative z-10">
         {/* Top bar */}
@@ -27,10 +28,7 @@ export default function Home() {
               Satellite Intelligence Platform
             </span>
           </div>
-          <div className="hidden text-right font-mono text-[10px] uppercase leading-relaxed tracking-[0.16em] text-ink-dim md:block">
-            <p data-numeric="true">34.8522° N · 118.2437° W</p>
-            <p>ALT 705KM · SUN SYNC</p>
-          </div>
+          <LiveCoordinates />
         </header>
 
         {/* Hero */}
