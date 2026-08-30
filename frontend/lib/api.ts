@@ -205,3 +205,14 @@ export function detectFeatures(body: {
 }): Promise<DetectResult> {
   return postJSON<DetectResult>("/api/detect", body);
 }
+
+export interface GeocodeResult {
+  label: string;
+  lat: number;
+  lon: number;
+  bounds: [[number, number], [number, number]] | null;
+}
+
+export function geocode(query: string): Promise<GeocodeResult> {
+  return getJSON<GeocodeResult>(`/api/geocode?q=${encodeURIComponent(query)}`);
+}

@@ -2,6 +2,8 @@
 
 import { PanelRightClose, PanelRightOpen, MessageSquare, X } from "lucide-react";
 import { MissionClock } from "./MissionClock";
+import { LocationSearch } from "./LocationSearch";
+import { CoordRegion } from "./CoordRegion";
 
 type HeaderProps = {
   chatOpenMobile: boolean;
@@ -43,9 +45,18 @@ export function Header({
 
         <div className="hidden h-4 w-px bg-line sm:block" aria-hidden="true" />
 
-        <span className="hidden font-mono text-micro uppercase tracking-[0.14em] text-ink-faint sm:inline">
+        <span className="hidden font-mono text-micro uppercase tracking-[0.14em] text-ink-faint lg:inline">
           Workspace
         </span>
+      </div>
+
+      <div className="flex items-center gap-2.5">
+        <div className="hidden md:block">
+          <LocationSearch />
+        </div>
+        <div className="hidden md:block">
+          <CoordRegion />
+        </div>
       </div>
 
       <div className="flex items-center gap-4">

@@ -7,8 +7,6 @@ import { Crosshair, RotateCcw } from "lucide-react";
 import { MAP_DEFAULTS, type LatLngTuple } from "@/lib/mapConfig";
 import { useMapStore } from "@/lib/store";
 import { postAnalyze } from "@/lib/api";
-import type { Region } from "./RegionLayer";
-
 /**
  * Leaflet touches `window` on import, so MapView must never render on the
  * server. `ssr: false` is only legal from a Client Component — this file
@@ -41,7 +39,8 @@ export function MapStage({ children }: MapStageProps) {
   const mapRef = useRef<LeafletMap | null>(null);
   const [drawMode, setDrawMode] = useState(false);
   const [center, setCenter] = useState<LatLngTuple>(MAP_DEFAULTS.center);
-  const [regions, setRegions] = useState<Region[]>([]);
+  const regions = useMapStore((s) => s.regions);
+  const addRegion = useMapStore((s) => s.addRegion);
 
   const handleReady = useCallback((map: LeafletMap) => {
     mapRef.current = map;
@@ -56,7 +55,7 @@ export function MapStage({ children }: MapStageProps) {
   }, []);
 
   const handleDrawComplete = useCallback((positions: LatLngTuple[]) => {
-    setRegions((prev) => [...prev, { id: `region-${Date.now()}`, positions }]);
+    addRegion({ id: `region-${Date.now()}`, positions });
     setDrawMode(false);
 
     const ring = positions.map(([lat, lng]) => [lng, lat]);
@@ -69,7 +68,7 @@ export function MapStage({ children }: MapStageProps) {
       .then((result) => useMapStore.getState().setRegionResult(result))
       .catch(() => useMapStore.getState().setRegionResult(null))
       .finally(() => useMapStore.getState().setAnalyzing(false));
-  }, []);
+  }, [addRegion]);
 
   const handleDrawCancel = useCallback(() => {
     setDrawMode(false);

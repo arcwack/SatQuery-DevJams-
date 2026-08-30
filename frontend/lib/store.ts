@@ -22,6 +22,12 @@ export interface Evidence {
   stats: unknown;
 }
 
+export interface Region {
+  id: string;
+  positions: [number, number][];
+  label?: string;
+}
+
 /**
  * Shared workspace state. Named `useMapStore` to match the intent
  * referenced across the workspace components' design notes.
@@ -44,6 +50,7 @@ interface WorkspaceState {
   timelineNarrative: string | null;
   timelineStartDate: string | null;
   timelineChange: { water: number; vegetation: number; built_up: number } | null;
+  regions: Region[];
 
   setRasters: (rasters: RasterInfo[]) => void;
   setActiveYear: (year: number) => void;
@@ -61,6 +68,7 @@ interface WorkspaceState {
   setActiveDate: (date: string) => void;
   setTimeline: (narrative: string, startDate: string, change: { water: number; vegetation: number; built_up: number }) => void;
   clearTimeline: () => void;
+  addRegion: (region: Region) => void;
 }
 
 let messageId = 0;
@@ -83,6 +91,7 @@ export const useMapStore = create<WorkspaceState>((set) => ({
   timelineNarrative: null,
   timelineStartDate: null,
   timelineChange: null,
+  regions: [],
 
   setRasters: (rasters) => set({ rasters }),
   setActiveYear: (activeYear) => set({ activeYear }),
@@ -102,4 +111,5 @@ export const useMapStore = create<WorkspaceState>((set) => ({
   setTimeline: (timelineNarrative, timelineStartDate, timelineChange) =>
     set({ timelineNarrative, timelineStartDate, timelineChange }),
   clearTimeline: () => set({ timelineNarrative: null, timelineStartDate: null, timelineChange: null }),
+  addRegion: (region) => set((s) => ({ regions: [...s.regions, region] })),
 }));
