@@ -66,7 +66,7 @@ export function ChatPanel() {
       className="flex h-full w-full flex-col border-l-0 border-t-0 border-b-0"
     >
       <div className="flex h-14 shrink-0 items-center border-b border-line px-4">
-        <Eyebrow tone="dim">Query console</Eyebrow>
+        <Eyebrow tone="signal">Query console</Eyebrow>
       </div>
 
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
@@ -87,11 +87,15 @@ export function ChatPanel() {
             key={msg.id}
             className={`max-w-[92%] rounded-hard border px-3 py-2 text-left ${
               msg.role === "user"
-                ? "self-end border-line bg-void-3/60 text-ink"
-                : "self-start border-line bg-void-2/80 text-ink-dim"
+                ? "self-end border-signal/40 bg-void-3/80 text-ink"
+                : "self-start border-line bg-void-2 text-ink"
             }`}
           >
-            <p className="text-caption font-medium uppercase tracking-wider text-ink-faint">
+            <p
+              className={`text-caption font-semibold uppercase tracking-wider ${
+                msg.role === "user" ? "text-signal" : "text-ink-dim"
+              }`}
+            >
               {msg.role === "user" ? "You" : "System"}
             </p>
             <p className="mt-1 whitespace-pre-wrap text-small leading-relaxed">{msg.text}</p>
@@ -99,13 +103,13 @@ export function ChatPanel() {
         ))}
 
         {sending && (
-          <div className="self-start max-w-[92%] rounded-hard border border-line bg-void-2/80 px-3 py-2">
-            <p className="text-caption font-medium uppercase tracking-wider text-ink-faint">
+          <div className="self-start max-w-[92%] rounded-hard border border-line bg-void-2 px-3 py-2">
+            <p className="text-caption font-semibold uppercase tracking-wider text-ink-dim">
               System
             </p>
             <div className="mt-1 flex items-center gap-1.5">
               <Loader size={12} className="animate-spin text-signal" />
-              <span className="text-small text-ink-dim">Analyzing…</span>
+              <span className="text-small text-ink">Analyzing…</span>
             </div>
           </div>
         )}
@@ -113,7 +117,7 @@ export function ChatPanel() {
       </div>
 
       <div className="shrink-0 border-t border-line px-4 py-4">
-        <Eyebrow tone="dim" className="mb-2.5">
+        <Eyebrow tone="signal" className="mb-2.5">
           Suggested
         </Eyebrow>
         <div className="mb-3 flex flex-col gap-1.5">
@@ -123,21 +127,21 @@ export function ChatPanel() {
               type="button"
               data-cursor="action"
               onClick={() => handleSend(prompt)}
-              className="rounded-hard border border-line bg-void-3/50 px-3 py-2 text-left text-caption text-ink-dim transition-colors hover:border-line-bright hover:text-ink"
+              className="rounded-hard border border-line bg-void-3/50 px-3 py-2 text-left text-caption text-ink transition-colors hover:border-signal hover:text-signal-bright"
             >
               {prompt}
             </button>
           ))}
         </div>
 
-        <div className="flex items-center gap-2 rounded-hard border border-line bg-void-3/60 px-3 py-2.5">
+        <div className="flex items-center gap-2 rounded-hard border border-line bg-void-3/70 px-3 py-2.5 focus-within:border-line-bright">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Query the archive…"
-            className="w-full bg-transparent text-small text-ink placeholder:text-ink-faint focus:outline-none"
+            className="w-full bg-transparent text-small text-ink placeholder:text-ink-dim focus:outline-none"
           />
           <button
             type="button"
@@ -145,7 +149,7 @@ export function ChatPanel() {
             disabled={!input.trim() || sending}
             aria-label="Send query"
             data-cursor="action"
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-hard text-ink-faint transition-colors hover:text-signal disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-hard text-ink-dim transition-colors hover:text-signal disabled:cursor-not-allowed disabled:opacity-40"
           >
             <SendHorizontal size={14} />
           </button>
