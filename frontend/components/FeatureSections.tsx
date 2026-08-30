@@ -73,13 +73,6 @@ function RegionVisual() {
   </motion.div>;
 }
 
-function AnomalyVisual() {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [40, -40]);
-  return <motion.div ref={ref} style={{ y }} className="relative aspect-[520/260] w-full overflow-hidden rounded-sm border border-line bg-[#111b28] p-4"><svg viewBox="0 0 520 210" className="size-full" aria-hidden="true"><MapGrid /><path d="M30 178L110 140 192 156 272 94 344 112 430 70 510 86" fill="none" stroke="#b9e7e5" opacity=".35" strokeWidth="2" /><circle cx="330" cy="104" r="42" fill="#ffcf88" opacity=".08" className="animate-anomaly-pulse" /><circle cx="330" cy="104" r="24" fill="#ffcf88" opacity=".18" className="animate-anomaly-pulse" /><circle cx="330" cy="104" r="7" fill="#ffcf88" /><path d="M330 58V150M284 104H376" stroke="#ffcf88" opacity=".35" strokeDasharray="3 5" /></svg><div className="absolute left-7 top-7 border border-[#ffcf88]/50 bg-void/80 p-3 font-mono text-[10px] uppercase tracking-[.11em] text-ink"><span className="text-[#ffcf88]">Alert / 07:42 UTC</span><br />Anomaly flagged</div></motion.div>;
-}
-
 function ProximityVisual() {
   return <div className="relative aspect-[520/260] w-full overflow-hidden rounded-sm border border-line bg-[#0d1921] p-4"><div className="absolute left-5 right-5 top-5 border-b border-line pb-3 font-mono text-[10px] uppercase tracking-[.12em] text-ink-dim">&gt; New construction near the reservoir</div><svg viewBox="0 0 520 210" className="mt-10 size-full" aria-hidden="true"><MapGrid /><path d="M102 135C124 84 191 64 247 82S337 132 309 169 207 190 150 170Z" fill="#4d91a1" opacity=".55" /><circle cx="225" cy="128" r="76" fill="none" stroke={MINT} strokeWidth="2" strokeDasharray="7 5" opacity=".8" /><path d="M318 56l28 12-10 26-32-4zM382 70l32 9-12 28-36-8zM424 120l31 8-9 28-34-6z" fill={MINT} opacity=".75" /><text x="360" y="190" fill={MINT} fontFamily="monospace" fontSize="13">14 RESULTS</text></svg></div>;
 }
@@ -116,8 +109,5 @@ function CapabilitiesRow() {
 }
 
 export function FeatureSections() {
-  return <>
-    <CapabilitiesRow />
-    <FeatureShell index={3} eyebrow="SECTION 03 // PROACTIVE ANOMALY DETECTION" title="Proactive anomaly detection" description="SatQuery watches for sharp departures in the signal and flags them before you ask."><AnomalyVisual /></FeatureShell>
-  </>;
+  return <CapabilitiesRow />;
 }
