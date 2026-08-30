@@ -333,9 +333,83 @@ def _forced_operation(query: str) -> dict[str, Any] | None:
     return None
 
 
+# Deterministic guardrail: clearly out-of-scope topics always get the rejection,
+# independent of the LLM (which can be rate-limited or down).
+IN_SCOPE_KEYWORDS = (
+    "satquery", "satellite", "earth", "imagery", "map", "geospatial", "orbit", "planet",
+    "water", "vegetation", "forest", "tree", "built", "urban", "city", "region", "land",
+    "change", "changing", "ndvi", "crop", "ocean", "river", "lake", "aral", "coverage",
+    "deforestation", "time machine", "timeline", "query console", "evidence", "workspace",
+    "analysis", "analyze", "land cover", "class", "detected", "degradation",
+)
+OUT_SCOPE_KEYWORDS = (
+    "weather", "recipe", "cook", "ingredient", "python", "javascript", "java ", "code",
+    "programming", "function to", "bug", "solve", "equation", "theorem", "math",
+    "capital of", "history of", "president", "news", "movie", "song", "translate",
+    "homework", "essay", "2+2", "stock price", "cricket", "football", "basketball", "film",
+)
+
+
+def _out_of_scope(query: str) -> bool:
+    q = query.lower()
+    if any(k in q for k in IN_SCOPE_KEYWORDS):
+        return False
+    return any(k in q for k in OUT_SCOPE_KEYWORDS)
+
+
+def _faq_answer(query: str) -> str | None:
+    """Canned answers for common SatQuery questions (works without the LLM)."""
+    q = query.lower()
+    if "time machine" in q or "timeline" in q or "change over time" in q:
+        return (
+            "The Time Machine slider at the bottom of the workspace scrubs the map between "
+            "dates. Drag it or press play to watch the imagery change year by year; SatQuery "
+            "computes the land-cover change and narrates it."
+        )
+    if "query console" in q or "chat" in q or "ask" in q:
+        return (
+            "The Query console (left panel) takes plain-language questions. It detects the "
+            "right spatial operation — detect, quantify, change, overlay, or list — and runs "
+            "it on the imagery, highlighting results on the map."
+        )
+    if "region summary" in q or "summarize" in q or "draw a region" in q:
+        return (
+            "Draw a region on the map (or use the coordinate tool) and SatQuery reports how "
+            "much water, vegetation, and built-up land it contains, plus whether it changed "
+            "significantly."
+        )
+    if "what satellite data" in q or "what data" in q or "which satellite" in q:
+        return (
+            "SatQuery analyzes NASA satellite imagery (GIBS) and NASA's Dynamic World 10m "
+            "land-cover dataset."
+        )
+    if "satquery" in q and ("what" in q or "who" in q or "about" in q):
+        return (
+            "SatQuery is a satellite-intelligence platform. Ask questions about imagery in "
+            "plain language, draw a region for an instant land-cover summary, or scrub a "
+            "timeline to see how a place changes over time."
+        )
+    if "satquery" in q:
+        return (
+            "SatQuery is a satellite-intelligence platform. Ask about satellite imagery in "
+            "plain language, draw a region for a summary, or scrub a timeline."
+        )
+    return None
+
+
 @app.post("/api/query", response_model=QueryResponse, summary="Plain-language spatial query")
 def query(request: QueryRequest) -> QueryResponse:
-    """Interpret a plain-language spatial question (LLM + guardrails) and run it."""
+    """Interpret a plain-language spatial question (deterministic guardrail + LLM) and run it."""
+    if _out_of_scope(request.query):
+        return QueryResponse(
+            intent="reject",
+            reply=llm_service.REJECTION,
+            stats={},
+            highlights=_empty_highlights(),
+        )
+    faq = _faq_answer(request.query)
+    if faq:
+        return QueryResponse(intent="faq", reply=faq, stats={}, highlights=_empty_highlights())
     try:
         decision = _forced_operation(request.query) or llm_service.interpret_query(request.query)
         result = _dispatch_decision(decision, request)
