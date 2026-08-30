@@ -31,8 +31,8 @@ function clamp01(v: number) {
 
 /** Fresnel rim shader for the atmospheric halo (rendered on the back side). */
 const atmosphereUniforms = {
-  uColor: { value: new THREE.Color(MINT) },
-  uIntensity: { value: 0.8 },
+  uColor: { value: new THREE.Color("#d9f3ff") },
+  uIntensity: { value: 0.28 },
 };
 
 const atmosphereVertex = /* glsl */ `
@@ -88,7 +88,7 @@ function Earth({ progress }: { progress: React.RefObject<number> }) {
       </mesh>
 
       {/* Atmosphere halo */}
-      <mesh scale={1.13}>
+      <mesh scale={1.07}>
         <sphereGeometry args={[EARTH_RADIUS, 48, 48]} />
         <shaderMaterial
           uniforms={atmosphereUniforms}
@@ -215,7 +215,7 @@ function Scene({ progress }: { progress: React.RefObject<number> }) {
     <>
       <ambientLight intensity={0.35} />
       <directionalLight position={[-4, 2, 5]} intensity={1.6} color="#eaf6ff" />
-      <directionalLight position={[3, -1, -2]} intensity={0.3} color={MINT} />
+      <directionalLight position={[3, -1, -2]} intensity={0.12} color="#d9f3ff" />
       <React.Suspense fallback={null}>
         <Earth progress={progress} />
       </React.Suspense>
