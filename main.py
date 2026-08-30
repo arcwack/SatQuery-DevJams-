@@ -337,7 +337,7 @@ def _forced_operation(query: str) -> dict[str, Any] | None:
 # independent of the LLM (which can be rate-limited or down).
 IN_SCOPE_KEYWORDS = (
     "satquery", "satellite", "earth", "imagery", "map", "geospatial", "orbit", "planet",
-    "water", "vegetation", "forest", "tree", "built", "urban", "city", "region", "land",
+    "water", "vegetation", "forest", "tree", "built", "urban", "region", "land",
     "change", "changing", "ndvi", "crop", "ocean", "river", "lake", "aral", "coverage",
     "deforestation", "time machine", "timeline", "query console", "evidence", "workspace",
     "analysis", "analyze", "land cover", "class", "detected", "degradation",
@@ -347,14 +347,25 @@ OUT_SCOPE_KEYWORDS = (
     "programming", "function to", "bug", "solve", "equation", "theorem", "math",
     "capital of", "history of", "president", "news", "movie", "song", "translate",
     "homework", "essay", "2+2", "stock price", "cricket", "football", "basketball", "film",
+    # unsupported geospatial / external datasets / subjective
+    "address", "geocod", "street", "postcode", "postal", "demograph", "population",
+    "real estate", "buy land", "property price", "house price", "air quality", "elevation",
+    "height of a", "good place to live", "good place to buy", "safe area",
+    "is this area safe", "traffic", "speed limit",
 )
 
 
 def _out_of_scope(query: str) -> bool:
+    """True if the query is clearly NOT about SatQuery / satellite geospatial analysis."""
     q = query.lower()
+    # Specific out-of-scope markers always win (subjective, external datasets, etc.)
+    if any(k in q for k in OUT_SCOPE_KEYWORDS):
+        return True
+    # Otherwise allow questions that reference in-scope topics.
     if any(k in q for k in IN_SCOPE_KEYWORDS):
         return False
-    return any(k in q for k in OUT_SCOPE_KEYWORDS)
+    # Generic / unrelated (no in-scope signal) -> reject.
+    return True
 
 
 def _faq_answer(query: str) -> str | None:
