@@ -77,6 +77,19 @@ export function getGibsTileUrl(
 const WMS_BASE = "https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi";
 
 /**
+ * A single cloud-free "Blue Marble" image of Earth (NASA GIBS WMS GetMap).
+ * This is a static, cloudless composite with no time dimension — ideal for a
+ * clear hero backdrop, unlike the daily true-color layers which show clouds.
+ */
+export function getBlueMarbleUrl(width = 1600, height = 1000): string {
+  const world = 20037508.34;
+  return `${WMS_BASE}?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0` +
+    `&LAYERS=BlueMarble_ShadedRelief_Bathymetry&STYLES=&FORMAT=image/jpeg` +
+    `&CRS=EPSG:3857&BBOX=${-world},${-world},${world},${world}` +
+    `&WIDTH=${width}&HEIGHT=${height}`;
+}
+
+/**
  * A single static satellite image (GIBS WMS GetMap) sized to `width`x`height`,
  * centered on a location at a given zoom. Used for the landing-page backdrop —
  * one image request instead of a tile cascade, so it loads immediately rather

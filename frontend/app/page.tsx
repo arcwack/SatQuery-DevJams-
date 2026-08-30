@@ -1,8 +1,4 @@
-"use client";
-
-import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
-import { EarthSatellite } from "@/components/EarthSatellite";
 import { SatelliteBackdrop } from "@/components/SatelliteBackdrop";
 import { Eyebrow } from "@/components/system/Eyebrow";
 
@@ -16,26 +12,9 @@ const FUN_FACTS = [
 ];
 
 export default function Home() {
-  const { scrollYProgress } = useScroll();
-  const x = useTransform(
-    scrollYProgress,
-    [0, 0.28, 0.56, 0.82, 1],
-    ["52vw", "10vw", "52vw", "10vw", "40vw"],
-  );
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1.1, 1.3, 1.1]);
-  const rotate = useTransform(scrollYProgress, [0, 1], [0, 45]);
-
   return (
     <main className="relative min-h-dvh overflow-x-hidden bg-void text-ink">
       <SatelliteBackdrop />
-
-      {/* Drifting satellite — swings left/right as you scroll */}
-      <motion.div
-        style={{ x, scale, rotate }}
-        className="pointer-events-none fixed left-0 top-[12%] z-20"
-      >
-        <EarthSatellite />
-      </motion.div>
 
       <div className="relative z-10">
         {/* Top bar */}
