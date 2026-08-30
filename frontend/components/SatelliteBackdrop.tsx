@@ -1,23 +1,17 @@
 /**
- * Landing hero backdrop: a NASA public-domain photo of Earth observed from
- * the International Space Station (spacecraft in the corner, blue ocean,
- * clouds, black space). Single image, immediate load. Dark overlay + left
- * gradient keep the headline legible.
+ * Landing hero backdrop: the user's photo of Earth from space (served from
+ * /public as earth-from-space.jpg), darkened + gradient for headline legibility.
  */
-
-const EARTH_FROM_SPACE =
-  "https://images-assets.nasa.gov/image/iss045e013851/iss045e013851~large.jpg";
 
 export function SatelliteBackdrop() {
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#05070b]" aria-hidden="true">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={EARTH_FROM_SPACE}
+        src="/earth-from-space.jpg"
         alt=""
         loading="eager"
         fetchPriority="high"
-        referrerPolicy="no-referrer"
         className="h-full w-full object-cover object-center"
       />
 
