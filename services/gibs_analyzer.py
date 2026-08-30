@@ -18,8 +18,9 @@ import httpx
 import numpy as np
 from affine import Affine
 from PIL import Image
-from rasterio.features import geometry_mask
-from shapely.geometry import shape
+from rasterio.features import geometry_mask, shapes as raster_shapes
+from shapely.geometry import mapping, shape
+from shapely.ops import unary_union
 
 from services import gis_engine
 
@@ -74,8 +75,8 @@ def _choose_zoom(minx: float, miny: float, maxx: float, maxy: float) -> tuple[in
     )
 
 
-def _fetch_rgb(polygon: Any, date_str: str) -> tuple[np.ndarray, np.ndarray]:
-    """Return (rgb_canvas, inside_mask) for the polygon at a date."""
+def _fetch_rgb(polygon: Any, date_str: str) -> tuple[np.ndarray, np.ndarray, Affine]:
+    """Return (rgb_canvas, inside_mask, transform) for the polygon at a date."""
     minx, miny, maxx, maxy = polygon.bounds
     z, x0, x1, y0, y1 = _choose_zoom(minx, miny, maxx, maxy)
     cols = x1 - x0 + 1
@@ -105,10 +106,13 @@ def _fetch_rgb(polygon: Any, date_str: str) -> tuple[np.ndarray, np.ndarray]:
     mask = geometry_mask(
         [polygon.__geo_interface__], out_shape=(height, width), transform=transform, invert=True
     )
-    return canvas, mask
+    return canvas, mask, transform
 
 
-def _classify(rgb: np.ndarray, mask: np.ndarray) -> dict[str, float | int]:
+def _classify_masks(
+    rgb: np.ndarray, mask: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Return (vegetation, water, built_up, valid) boolean masks."""
     r = rgb[:, :, 0].astype(np.float32) / 255.0
     g = rgb[:, :, 1].astype(np.float32) / 255.0
     b = rgb[:, :, 2].astype(np.float32) / 255.0
@@ -123,6 +127,11 @@ def _classify(rgb: np.ndarray, mask: np.ndarray) -> dict[str, float | int]:
     built_up = (~vegetation) & (~water) & (~cloud)
 
     valid = mask & (~cloud)
+    return vegetation, water, built_up, valid
+
+
+def _classify(rgb: np.ndarray, mask: np.ndarray) -> dict[str, float | int]:
+    vegetation, water, built_up, valid = _classify_masks(rgb, mask)
     total = int(valid.sum())
     if total == 0:
         return {"water_pct": 0.0, "vegetation_pct": 0.0, "built_up_pct": 0.0, "valid_pixels": 0}
@@ -157,9 +166,9 @@ def analyze_region(
     end_date = end_date or _default_end_date()
     start_date = start_date or _default_start_date(end_date)
 
-    end_rgb, end_mask = _fetch_rgb(polygon, end_date)
+    end_rgb, end_mask, _ = _fetch_rgb(polygon, end_date)
     end_stats = _classify(end_rgb, end_mask)
-    start_rgb, start_mask = _fetch_rgb(polygon, start_date)
+    start_rgb, start_mask, _ = _fetch_rgb(polygon, start_date)
     start_stats = _classify(start_rgb, start_mask)
 
     change = {
@@ -178,4 +187,85 @@ def analyze_region(
         "end_date": end_date,
         "changed": changed,
         "change": change,
+    }
+
+
+TARGET_KEYWORDS = {
+    "water": ("water", "river", "lake", "sea", "ocean", "coast", "reservoir"),
+    "vegetation": ("vegetation", "green", "forest", "tree", "grass", "crop", "farm", "field"),
+    "built_up": ("built", "building", "urban", "construction", "city", "road", "town"),
+}
+
+
+def _target_from_query(query: str) -> str | None:
+    q = query.lower()
+    for cls, keywords in TARGET_KEYWORDS.items():
+        if any(k in q for k in keywords):
+            return cls
+    return None
+
+
+def _build_reply(target: str | None, stats: dict[str, float]) -> str:
+    if target == "water":
+        return f"Water bodies cover {stats['water_pct']}% of the selected area."
+    if target == "vegetation":
+        return f"Green vegetation covers {stats['vegetation_pct']}% of the selected area."
+    if target == "built_up":
+        return f"Built-up and bare land covers {stats['built_up_pct']}% of the selected area."
+    return (
+        f"The selected area is roughly {stats['vegetation_pct']}% vegetation, "
+        f"{stats['water_pct']}% water, and {stats['built_up_pct']}% built-up/bare land."
+    )
+
+
+def _vectorize(mask: np.ndarray, transform: Affine, class_name: str) -> list[dict[str, Any]]:
+    """Convert a boolean mask into one simplified GeoJSON feature."""
+    geoms = [
+        shape(geom)
+        for geom, value in raster_shapes(mask.astype(np.uint8), transform=transform)
+        if value
+    ]
+    if not geoms:
+        return []
+    merged = unary_union(geoms)
+    if merged.is_empty:
+        return []
+    merged = merged.simplify(0.0006, preserve_topology=True)
+    return [{"type": "Feature", "properties": {"class": class_name}, "geometry": mapping(merged)}]
+
+
+def detect_features(
+    geometry: dict[str, Any], query: str = "", date_str: str | None = None
+) -> dict[str, Any]:
+    """Classify a region and return text + highlight polygons for the map."""
+    polygon = shape(gis_engine._parse_geometry(geometry))
+    date_str = date_str or _default_end_date()
+
+    rgb, mask, transform = _fetch_rgb(polygon, date_str)
+    vegetation, water, built_up, valid = _classify_masks(rgb, mask)
+    stats = _classify(rgb, mask)
+
+    target = _target_from_query(query)
+    if target:
+        classes = {"water": water, "vegetation": vegetation, "built_up": built_up}
+        masks = [(target, classes[target] & mask)]
+    else:
+        masks = [
+            ("water", water & mask),
+            ("vegetation", vegetation & mask),
+            ("built_up", built_up & mask),
+        ]
+
+    features: list[dict[str, Any]] = []
+    for name, class_mask in masks:
+        features.extend(_vectorize(class_mask, transform, name))
+
+    return {
+        "reply": _build_reply(target, stats),
+        "stats": {
+            "water_pct": stats["water_pct"],
+            "vegetation_pct": stats["vegetation_pct"],
+            "built_up_pct": stats["built_up_pct"],
+        },
+        "highlights": {"type": "FeatureCollection", "features": features},
     }

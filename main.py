@@ -104,6 +104,22 @@ class AnalyzeResponse(BaseModel):
     change: dict[str, float]
 
 
+class DetectRequest(BaseModel):
+    """Request body for POST /api/detect."""
+
+    geometry: dict[str, Any] = Field(..., description="GeoJSON polygon in EPSG:4326.")
+    query: str = Field(default="", description="Free-text question, used to pick a class.")
+    date: str | None = Field(default=None, description="ISO date of the imagery.")
+
+
+class DetectResponse(BaseModel):
+    """Response payload for POST /api/detect."""
+
+    reply: str
+    stats: dict[str, Any]
+    highlights: dict[str, Any]
+
+
 def _region_narrative(stats: dict[str, Any]) -> str:
     """Describe vegetation/water cover from raw cover statistics."""
     return (
@@ -177,6 +193,20 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
             status.HTTP_502_BAD_GATEWAY, f"Unable to fetch satellite imagery: {exc}"
         ) from exc
     return AnalyzeResponse(**result)
+
+
+@app.post("/api/detect", response_model=DetectResponse, summary="Detect & highlight features")
+def detect(request: DetectRequest) -> DetectResponse:
+    """Classify a region and return highlight polygons plus a text answer."""
+    try:
+        result = gibs_analyzer.detect_features(request.geometry, request.query, request.date)
+    except gis_engine.GeometryError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"Unable to fetch satellite imagery: {exc}"
+        ) from exc
+    return DetectResponse(**result)
 
 
 @app.post("/api/query", response_model=QueryResponse, summary="Plain-language spatial query")
