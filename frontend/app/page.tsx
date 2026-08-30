@@ -3,16 +3,7 @@ import { EarthScene3D } from "@/components/EarthScene3D";
 import { LiveCoordinates } from "@/components/LiveCoordinates";
 import { ScrollSection, ScrollStory } from "@/components/ScrollStory";
 import { FeatureSections } from "@/components/FeatureSections";
-import { Eyebrow } from "@/components/system/Eyebrow";
-
-const FUN_FACTS = [
-  { title: "90% of the Aral Sea", body: "The Aral Sea has lost roughly 90% of its volume since the 1960s — one of the fastest human-driven environmental changes ever filmed from space." },
-  { title: "705 km up", body: "Sun-synchronous satellites orbit about 705 km above the surface, circling the planet roughly every 90 minutes." },
-  { title: "A planet a day", body: "A single satellite can image the entire Earth in one day — enough to watch seasons shift and cities sprawl." },
-  { title: "Green from orbit", body: "NDVI measures plant health from space: healthy vegetation reflects near-infrared strongly, so forests glow green in the data." },
-  { title: "Meters, not guesses", body: "Modern sensors resolve features just a few metres across — a new construction site is visible within months, not years." },
-  { title: "Cloud-free composites", body: "Satellites combine many passes to strip out clouds, giving clean, comparable images of the same place over decades." },
-];
+import { UseCasesClosing } from "@/components/UseCasesClosing";
 
 export default function Home() {
   return (
@@ -58,38 +49,9 @@ export default function Home() {
           </ScrollSection>
 
           <FeatureSections />
+          <UseCasesClosing />
 
-          {/* Fun facts / section 04 */}
-          <ScrollSection index={4} label="SECTION 04 // PLANETARY SIGNAL" className="items-start pt-24">
-            <div className="w-full">
-              <Eyebrow tone="signal">Did you know?</Eyebrow>
-              <h2 className="mt-4 font-display text-section font-semibold text-ink">
-                Our changing planet
-              </h2>
-              <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {FUN_FACTS.map((fact) => (
-                  <article
-                    key={fact.title}
-                    className="rounded-soft border border-line bg-void-2/70 p-5 backdrop-blur-sm"
-                  >
-                    <h3 className="font-display text-subhead font-semibold text-ink">{fact.title}</h3>
-                    <p className="mt-2 text-small leading-relaxed text-ink-dim">{fact.body}</p>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </ScrollSection>
         </ScrollStory>
-
-        {/* Corner telemetry */}
-        <footer className="flex items-end justify-between px-6 pb-6 sm:px-10">
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#8CFFBE]/70">
-            Scanning · Grid 478
-          </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#8CFFBE]/70">
-            NDVI Anomaly +0.14
-          </span>
-        </footer>
       </div>
     </main>
   );

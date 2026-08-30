@@ -18,8 +18,8 @@ interface ScrollRailProps {
 const sectionLabels = [
   "SECTION 01 // ORBITAL BRIEF",
   "SECTION 02 // CAPABILITIES",
-  "SECTION 03 // PROACTIVE ANOMALY DETECTION",
-  "SECTION 04 // PLANETARY SIGNAL",
+  "SECTION 03 // USE CASES",
+  "SECTION 04 // ORBITAL BRIEF",
 ];
 
 export function ScrollSection({ index, label, children, className = "" }: ScrollSectionProps) {
