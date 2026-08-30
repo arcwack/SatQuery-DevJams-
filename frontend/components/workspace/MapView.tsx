@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, GeoJSON, useMap, useMapEvents } from "react-leaflet";
 import L, { type Map as LeafletMap } from "leaflet";
 import { cn } from "@/lib/utils";
 import { MAP_DEFAULTS, ARAL_SEA, type LatLngTuple } from "@/lib/mapConfig";
 import { getGibsTileUrl, DEFAULT_GIBS_LAYER_ID, type GibsLayerId } from "@/lib/gibs";
+import { useMapStore } from "@/lib/store";
 import { MapControls } from "./MapControls";
 import { RegionLayer, type Region } from "./RegionLayer";
 
@@ -25,6 +26,29 @@ const locationIcon = L.divIcon({
   iconSize: [28, 28],
   iconAnchor: [14, 14],
 });
+
+/** Fill/outline color per detected class — muted, on-palette. */
+const CLASS_COLORS: Record<string, string> = {
+  water: "#5ea8d6",
+  vegetation: "#7a9b76",
+  built_up: "#c24b3f",
+};
+
+/** Renders detected land-cover polygons from /api/detect over the imagery. */
+function HighlightLayer() {
+  const highlights = useMapStore((s) => s.highlights);
+  if (!highlights || highlights.features.length === 0) return null;
+  return (
+    <GeoJSON
+      key={highlights.features.length}
+      data={highlights}
+      style={(feature) => {
+        const color = CLASS_COLORS[feature?.properties.class] ?? "#d98f4e";
+        return { color, weight: 1, fillOpacity: 0.35 };
+      }}
+    />
+  );
+}
 
 /**
  * Invisible bridge component. Rendered inside <MapContainer> so it can
@@ -121,6 +145,8 @@ export function MapView({
         onDrawComplete={onDrawComplete}
         onDrawCancel={onDrawCancel}
       />
+
+      <HighlightLayer />
 
       <MapControls />
 

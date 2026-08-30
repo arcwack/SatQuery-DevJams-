@@ -100,6 +100,12 @@ export interface RegionAnalysis {
   change: { water: number; vegetation: number; built_up: number };
 }
 
+export interface DetectResult {
+  reply: string;
+  stats: { water_pct: number; vegetation_pct: number; built_up_pct: number };
+  highlights: HighlightFeatureCollection;
+}
+
 export interface QueryBody {
   geometry: GeoJSONGeometry;
   query?: string;
@@ -181,4 +187,12 @@ export function postAnalyze(body: {
   end_date?: string;
 }): Promise<RegionAnalysis> {
   return postJSON<RegionAnalysis>("/api/analyze", body);
+}
+
+export function detectFeatures(body: {
+  geometry: GeoJSONGeometry;
+  query?: string;
+  date?: string;
+}): Promise<DetectResult> {
+  return postJSON<DetectResult>("/api/detect", body);
 }
