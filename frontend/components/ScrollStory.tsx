@@ -15,12 +15,7 @@ interface ScrollRailProps {
   progress: ReturnType<typeof useScroll>["scrollYProgress"];
 }
 
-const sectionLabels = [
-  "SECTION 01 // ORBITAL BRIEF",
-  "SECTION 02 // CAPABILITIES",
-  "SECTION 03 // USE CASES",
-  "SECTION 04 // PLANETARY SIGNAL",
-];
+const sectionLabels = ["Overview", "Capabilities", "Use cases", "Planetary signal"];
 
 export function ScrollSection({ index, label, children, className = "" }: ScrollSectionProps) {
   const ref = React.useRef<HTMLElement>(null);

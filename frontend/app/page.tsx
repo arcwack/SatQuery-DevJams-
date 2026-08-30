@@ -26,7 +26,7 @@ export default function Home() {
 
         <ScrollStory>
           {/* Hero / section 01 */}
-          <ScrollSection index={1} label="SECTION 01 // ORBITAL BRIEF" className="min-h-[calc(100svh-3rem)] pt-8">
+          <ScrollSection index={1} label="" className="min-h-[calc(100svh-3rem)] pt-8">
             <div className="max-w-xl">
               <p className="text-small leading-relaxed text-ink">
                 Ask questions about satellite imagery. Get answers directly on the map.

@@ -96,8 +96,8 @@ function CapabilitiesRow() {
   return (
     <section ref={ref} id="section-02" className="relative px-6 py-28 sm:px-10">
       <motion.div style={{ y, opacity }} className="mx-auto w-full max-w-6xl">
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">SECTION 02 // CAPABILITIES</p>
-        <h2 className="mt-5 max-w-3xl font-display text-5xl font-semibold uppercase leading-[0.92] tracking-[-0.06em] text-ink sm:text-6xl">Three ways to see it.</h2>
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">CAPABILITIES</p>
+        <h2 className="mt-5 max-w-3xl font-display text-5xl font-semibold uppercase leading-[0.92] tracking-[-0.06em] text-ink sm:text-6xl">Explore the planet with precision.</h2>
         <div className="mt-12 grid gap-5 md:grid-cols-3">
           <CapabilityCard title="Time machine" description="2018 → 2026: vegetation −27%, built-up +41%."><TimeMachineVisual /></CapabilityCard>
           <CapabilityCard title="Draw a region" description="Vegetation 38% · Water 6% · Built-up 22%."><RegionVisual /></CapabilityCard>

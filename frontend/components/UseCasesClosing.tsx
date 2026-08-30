@@ -21,7 +21,7 @@ export function UseCasesClosing() {
     <>
       <section ref={ref} id="section-03" className="relative px-6 py-28 sm:px-10">
         <motion.div style={{ y, opacity }} className="mx-auto w-full max-w-6xl">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">SECTION 03 // USE CASES</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">USE CASES</p>
           <h2 className="mt-5 max-w-2xl font-display text-5xl font-semibold uppercase leading-[0.92] tracking-[-0.06em] text-ink sm:text-6xl">Built for the questions that matter.</h2>
           <div className="mt-14 grid gap-x-10 gap-y-10 border-t border-line pt-8 sm:grid-cols-2 lg:grid-cols-4">
             {USE_CASES.map((useCase) => (
@@ -36,7 +36,7 @@ export function UseCasesClosing() {
 
       <section id="section-04" className="relative px-6 pb-24 pt-28 sm:px-10">
         <motion.div className="mx-auto w-full max-w-6xl" initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.6 }}>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">SECTION 04 // PLANETARY SIGNAL</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">PLANETARY SIGNAL</p>
           <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.2em] text-signal">Did you know?</p>
           <h2 className="mt-4 font-display text-5xl font-semibold uppercase leading-[0.92] tracking-[-0.06em] text-ink sm:text-6xl">Our changing planet</h2>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
