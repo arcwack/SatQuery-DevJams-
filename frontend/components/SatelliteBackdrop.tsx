@@ -1,32 +1,34 @@
-import { getBlueMarbleUrl } from "@/lib/gibs";
-
 /**
- * Full-bleed, cloud-free "Blue Marble" Earth backdrop for the landing hero.
- * A single static image request (no Leaflet, no tile cascade), so it renders
- * instantly as a clear planet background rather than a cloudy daily mosaic.
+ * Landing hero backdrop: a NASA public-domain photo of Earth observed from
+ * the International Space Station (spacecraft in the corner, blue ocean,
+ * clouds, black space). Single image, immediate load. Dark overlay + left
+ * gradient keep the headline legible.
  */
+
+const EARTH_FROM_SPACE =
+  "https://images-assets.nasa.gov/image/iss045e013851/iss045e013851~large.jpg";
+
 export function SatelliteBackdrop() {
-  const src = getBlueMarbleUrl();
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#05070b]" aria-hidden="true">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={src}
+        src={EARTH_FROM_SPACE}
         alt=""
         loading="eager"
         fetchPriority="high"
-        className="h-full w-full object-cover"
+        referrerPolicy="no-referrer"
+        className="h-full w-full object-cover object-center"
       />
 
-      {/* Subtle dark film overlay for legibility (lighter than before — the
-          Blue Marble is already cloud-free and clear) */}
+      {/* Dark film overlay so the headline reads clearly */}
       <div className="absolute inset-0 bg-[#02040a]/45" />
-      {/* Left-side darkening so hero text stays legible; vignette at edges */}
+      {/* Left-side darkening + edge vignette */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(to right, rgba(5,7,10,0.9) 0%, rgba(5,7,11,0.65) 32%, rgba(5,7,11,0.2) 58%, transparent 76%), radial-gradient(ellipse 95% 85% at 55% 45%, transparent 50%, rgba(2,4,10,0.85) 100%)",
+            "linear-gradient(to right, rgba(5,7,10,0.9) 0%, rgba(5,7,11,0.6) 34%, rgba(5,7,11,0.15) 60%, transparent 78%), radial-gradient(ellipse 95% 85% at 55% 45%, transparent 52%, rgba(2,4,10,0.85) 100%)",
         }}
       />
     </div>
