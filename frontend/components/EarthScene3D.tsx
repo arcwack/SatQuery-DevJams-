@@ -29,9 +29,33 @@ function clamp01(v: number) {
   return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
-/** Smooth limb light injected into the textured Earth material itself. */
-const atmosphereColor = new THREE.Color("#8ed9ef");
-const atmosphereIntensity = 0.72;
+/** Fresnel rim shader for the atmospheric halo (rendered on the back side). */
+const atmosphereUniforms = {
+  uColor: { value: new THREE.Color("#8ed9ef") },
+  uIntensity: { value: 1.05 },
+};
+
+const atmosphereVertex = /* glsl */ `
+  varying vec3 vNormal;
+  varying vec3 vView;
+  void main() {
+    vNormal = normalize(normalMatrix * normal);
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vView = normalize(-mv.xyz);
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
+const atmosphereFragment = /* glsl */ `
+  uniform vec3 uColor;
+  uniform float uIntensity;
+  varying vec3 vNormal;
+  varying vec3 vView;
+  void main() {
+    float f = pow(1.0 - abs(dot(vNormal, vView)), 2.05);
+    gl_FragColor = vec4(uColor, f * uIntensity);
+  }
+`;
 
 const EARTH_TEXTURES = [
   "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
@@ -60,28 +84,32 @@ function Earth({ progress }: { progress: React.RefObject<number> }) {
           specularMap={specularMap}
           specular={new THREE.Color("#9cc5c8")}
           shininess={18}
-          onBeforeCompile={(shader) => {
-            shader.uniforms.uAtmosphereColor = { value: atmosphereColor };
-            shader.uniforms.uAtmosphereIntensity = { value: atmosphereIntensity };
-            shader.vertexShader = shader.vertexShader
-              .replace(
-                "#include <common>",
-                "#include <common>\\nvarying vec3 vAtmosphereView;",
-              )
-              .replace(
-                "#include <project_vertex>",
-                "#include <project_vertex>\\nvAtmosphereView = normalize(-mvPosition.xyz);",
-              );
-            shader.fragmentShader = shader.fragmentShader
-              .replace(
-                "#include <common>",
-                "#include <common>\\nuniform vec3 uAtmosphereColor;\\nuniform float uAtmosphereIntensity;\\nvarying vec3 vAtmosphereView;",
-              )
-              .replace(
-                "#include <dithering_fragment>",
-                "float atmosphereFresnel = pow(1.0 - max(dot(normalize(vNormal), normalize(vAtmosphereView)), 0.0), 3.2);\\ngl_FragColor.rgb += uAtmosphereColor * atmosphereFresnel * uAtmosphereIntensity;\\n#include <dithering_fragment>",
-              );
-          }}
+        />
+      </mesh>
+
+      {/* Soft blue atmospheric halo: a tight limb plus a broad diffuse bloom. */}
+      <mesh scale={1.07}>
+        <sphereGeometry args={[EARTH_RADIUS, 48, 48]} />
+        <shaderMaterial
+          uniforms={atmosphereUniforms}
+          vertexShader={atmosphereVertex}
+          fragmentShader={atmosphereFragment}
+          side={THREE.BackSide}
+          blending={THREE.AdditiveBlending}
+          transparent
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh scale={1.21}>
+        <sphereGeometry args={[EARTH_RADIUS, 48, 48]} />
+        <shaderMaterial
+          uniforms={atmosphereUniforms}
+          vertexShader={atmosphereVertex}
+          fragmentShader={atmosphereFragment}
+          side={THREE.BackSide}
+          blending={THREE.AdditiveBlending}
+          transparent
+          depthWrite={false}
         />
       </mesh>
 
