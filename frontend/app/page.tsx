@@ -59,8 +59,8 @@ export default function Home() {
 
           <FeatureSections />
 
-          {/* Fun facts / section 06 */}
-          <ScrollSection index={6} label="SECTION 06 // PLANETARY SIGNAL" className="items-start pt-24">
+          {/* Fun facts / section 04 */}
+          <ScrollSection index={4} label="SECTION 04 // PLANETARY SIGNAL" className="items-start pt-24">
             <div className="w-full">
               <Eyebrow tone="signal">Did you know?</Eyebrow>
               <h2 className="mt-4 font-display text-section font-semibold text-ink">

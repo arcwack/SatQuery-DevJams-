@@ -84,11 +84,40 @@ function ProximityVisual() {
   return <div className="relative aspect-[520/260] w-full overflow-hidden rounded-sm border border-line bg-[#0d1921] p-4"><div className="absolute left-5 right-5 top-5 border-b border-line pb-3 font-mono text-[10px] uppercase tracking-[.12em] text-ink-dim">&gt; New construction near the reservoir</div><svg viewBox="0 0 520 210" className="mt-10 size-full" aria-hidden="true"><MapGrid /><path d="M102 135C124 84 191 64 247 82S337 132 309 169 207 190 150 170Z" fill="#4d91a1" opacity=".55" /><circle cx="225" cy="128" r="76" fill="none" stroke={MINT} strokeWidth="2" strokeDasharray="7 5" opacity=".8" /><path d="M318 56l28 12-10 26-32-4zM382 70l32 9-12 28-36-8zM424 120l31 8-9 28-34-6z" fill={MINT} opacity=".75" /><text x="360" y="190" fill={MINT} fontFamily="monospace" fontSize="13">14 RESULTS</text></svg></div>;
 }
 
+function CapabilityCard({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+  return (
+    <article className="flex min-w-0 flex-col rounded-soft border border-line bg-void-2/65 p-3 backdrop-blur-sm">
+      <div className="aspect-[520/260] w-full">{children}</div>
+      <h3 className="mt-5 font-display text-2xl font-semibold uppercase leading-none tracking-[-0.04em] text-ink">{title}</h3>
+      <p className="mt-3 text-small leading-relaxed text-ink-dim">{description}</p>
+    </article>
+  );
+}
+
+function CapabilitiesRow() {
+  const ref = React.useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 0.35, 0.7, 1], [28, 0, 0, -18]);
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+
+  return (
+    <section ref={ref} id="section-02" className="relative px-6 py-28 sm:px-10">
+      <motion.div style={{ y, opacity }} className="mx-auto w-full max-w-6xl">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">SECTION 02 // CAPABILITIES</p>
+        <h2 className="mt-5 max-w-3xl font-display text-5xl font-semibold uppercase leading-[0.92] tracking-[-0.06em] text-ink sm:text-6xl">Three ways to see it.</h2>
+        <div className="mt-12 grid gap-5 md:grid-cols-3">
+          <CapabilityCard title="Time machine" description="2018 → 2026: vegetation −27%, built-up +41%."><TimeMachineVisual /></CapabilityCard>
+          <CapabilityCard title="Draw a region" description="Vegetation 38% · Water 6% · Built-up 22%."><RegionVisual /></CapabilityCard>
+          <CapabilityCard title="Proximity queries" description="New construction near the reservoir — 14 results."><ProximityVisual /></CapabilityCard>
+        </div>
+      </motion.div>
+    </section>
+  );
+}
+
 export function FeatureSections() {
   return <>
-    <FeatureShell index={2} eyebrow="SECTION 02 // TIME MACHINE" title="Time machine" description="Slide through the archive to see what changed, from first green-up to final build-out." ><TimeMachineVisual /></FeatureShell>
-    <FeatureShell index={3} eyebrow="SECTION 03 // DRAW A REGION" title="Draw a region" description="Sketch a boundary and read the land cover mix at a glance, without leaving the map." reverse><RegionVisual /></FeatureShell>
-    <FeatureShell index={4} eyebrow="SECTION 04 // PROACTIVE ANOMALY DETECTION" title="Proactive anomaly detection" description="SatQuery watches for sharp departures in the signal and flags them before you ask." ><AnomalyVisual /></FeatureShell>
-    <FeatureShell index={5} eyebrow="SECTION 05 // PROXIMITY QUERIES" title="Proximity queries" description="Ask spatial questions in plain language and get a measured answer with a clear radius." reverse><ProximityVisual /></FeatureShell>
+    <CapabilitiesRow />
+    <FeatureShell index={3} eyebrow="SECTION 03 // PROACTIVE ANOMALY DETECTION" title="Proactive anomaly detection" description="SatQuery watches for sharp departures in the signal and flags them before you ask."><AnomalyVisual /></FeatureShell>
   </>;
 }
