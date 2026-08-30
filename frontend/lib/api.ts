@@ -174,7 +174,12 @@ export function fetchAnomalies(): Promise<Anomaly[]> {
   return getJSON<Anomaly[]>("/api/anomalies");
 }
 
-export function postQuery(body: QueryBody): Promise<QueryResult> {
+export function postQuery(body: {
+  geometry: GeoJSONGeometry;
+  query?: string;
+  start_date?: string;
+  end_date?: string;
+}): Promise<QueryResult> {
   return postJSON<QueryResult>("/api/query", body);
 }
 

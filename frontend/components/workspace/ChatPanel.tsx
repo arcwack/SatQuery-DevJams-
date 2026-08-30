@@ -5,14 +5,14 @@ import { SendHorizontal, Sparkles } from "lucide-react";
 import { Eyebrow } from "@/components/system/Eyebrow";
 import { GlassPanel } from "@/components/system/GlassPanel";
 import { useMapStore } from "@/lib/store";
-import { detectFeatures } from "@/lib/api";
+import { postQuery } from "@/lib/api";
 import { viewGeometry } from "@/lib/geo";
 
 const SUGGESTED_PROMPTS = [
   "What's visible here?",
   "Find all water bodies",
-  "Highlight vegetation",
-  "Highlight built-up areas",
+  "Show areas near the river where construction increased",
+  "What changed here over time?",
 ];
 
 /**
@@ -44,7 +44,7 @@ export function ChatPanel() {
 
     setSending(true);
     try {
-      const result = await detectFeatures({ geometry, query });
+      const result = await postQuery({ geometry, query });
       addMessage("assistant", result.reply);
       setHighlights(result.highlights);
     } catch (err) {
