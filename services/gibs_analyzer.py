@@ -205,16 +205,54 @@ def _target_from_query(query: str) -> str | None:
     return None
 
 
-def _build_reply(target: str | None, stats: dict[str, float]) -> str:
-    if target == "water":
-        return f"Water bodies cover {stats['water_pct']}% of the selected area."
-    if target == "vegetation":
-        return f"Green vegetation covers {stats['vegetation_pct']}% of the selected area."
-    if target == "built_up":
-        return f"Built-up and bare land covers {stats['built_up_pct']}% of the selected area."
+CLASS_LABELS = {
+    "water": "water",
+    "vegetation": "green vegetation",
+    "built_up": "built-up / bare land",
+}
+
+
+def _coverage_phrase(pct: float) -> str:
+    if pct < 5:
+        return "only a trace, so it is largely absent here"
+    if pct < 15:
+        return "a small share"
+    if pct < 40:
+        return "a moderate share"
+    if pct < 65:
+        return "a substantial share"
+    return "extensive — it clearly dominates the surface"
+
+
+def _build_reply(target: str | None, stats: dict[str, float], date_str: str) -> str:
+    if target:
+        pct = stats[f"{target}_pct"]
+        label = CLASS_LABELS[target]
+        others = sorted(
+            [("water", stats["water_pct"]), ("vegetation", stats["vegetation_pct"]), ("built_up", stats["built_up_pct"])],
+            key=lambda t: t[1],
+            reverse=True,
+        )
+        rest = ", ".join(f"{CLASS_LABELS[k]} {p}%" for k, p in others if k != target)
+        return (
+            f"{label.capitalize()} covers {pct}% of the selected area — "
+            f"{_coverage_phrase(pct)}. The remaining surface is split between "
+            f"{rest}. (Imagery {date_str})"
+        )
+
+    ranked = sorted(
+        [("water", stats["water_pct"], CLASS_LABELS["water"]),
+         ("vegetation", stats["vegetation_pct"], CLASS_LABELS["vegetation"]),
+         ("built_up", stats["built_up_pct"], CLASS_LABELS["built_up"])],
+        key=lambda t: t[1],
+        reverse=True,
+    )
+    top_label, top_pct = ranked[0][2], ranked[0][1]
+    mid = ", ".join(f"{lab} {p}%" for _, p, lab in ranked[1:])
     return (
-        f"The selected area is roughly {stats['vegetation_pct']}% vegetation, "
-        f"{stats['water_pct']}% water, and {stats['built_up_pct']}% built-up/bare land."
+        f"The selected area is dominated by {top_label} ({top_pct}%), followed by "
+        f"{mid}. Overall it reads as a {top_label.lower()}-dominated surface. "
+        f"(Imagery {date_str})"
     )
 
 
@@ -261,7 +299,7 @@ def detect_features(
         features.extend(_vectorize(class_mask, transform, name))
 
     return {
-        "reply": _build_reply(target, stats),
+        "reply": _build_reply(target, stats, date_str),
         "stats": {
             "water_pct": stats["water_pct"],
             "vegetation_pct": stats["vegetation_pct"],
