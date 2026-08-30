@@ -12,6 +12,8 @@
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "@fontsource/inter": "^5.3.0",
     "@fontsource/space-grotesk": "^5.3.0",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
     "clsx": "^2.1.1",
     "framer-motion": "^13.1.1",
     "leaflet": "^1.9.4",
@@ -21,6 +23,7 @@
     "react-dom": "19.2.8",
     "react-leaflet": "^5.0.0",
     "tailwind-merge": "^3.6.0",
+    "three": "^0.185.1",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
@@ -29,6 +32,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.185.4",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
     "tailwindcss": "^4",
