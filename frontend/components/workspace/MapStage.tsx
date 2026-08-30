@@ -1,12 +1,20 @@
 "use client";
 
-import { useCallback, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import type { Map as LeafletMap } from "leaflet";
 import { Crosshair, RotateCcw } from "lucide-react";
 import { MAP_DEFAULTS, type LatLngTuple } from "@/lib/mapConfig";
 import { useMapStore } from "@/lib/store";
 import { postAnalyze } from "@/lib/api";
+
+const SplitSliderOverlay = dynamic(
+  () => import("./SplitCurtain").then((m) => m.SplitSliderOverlay),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);
 /**
  * Leaflet touches `window` on import, so MapView must never render on the
  * server. `ssr: false` is only legal from a Client Component — this file
@@ -62,13 +70,34 @@ export function MapStage({ children }: MapStageProps) {
     ring.push(ring[0]);
     const geometry = { type: "Polygon", coordinates: [ring] };
 
-    useMapStore.getState().setGeometry(geometry);
-    useMapStore.getState().setAnalyzing(true);
-    postAnalyze({ geometry })
+    const st = useMapStore.getState();
+    st.setGeometry(geometry);
+    st.setAnalyzing(true);
+    const payload = st.splitEnabled
+      ? { geometry, start_date: st.splitLeftDate, end_date: st.splitRightDate }
+      : { geometry };
+    postAnalyze(payload)
       .then((result) => useMapStore.getState().setRegionResult(result))
       .catch(() => useMapStore.getState().setRegionResult(null))
       .finally(() => useMapStore.getState().setAnalyzing(false));
   }, [addRegion]);
+
+  // Keep Evidence CHANGE aligned with the split-screen dates (2021 → 2026) when split is active
+  const splitEnabled = useMapStore((s) => s.splitEnabled);
+  const splitLeftDate = useMapStore((s) => s.splitLeftDate);
+  const splitRightDate = useMapStore((s) => s.splitRightDate);
+  const geometry = useMapStore((s) => s.geometry);
+
+  useEffect(() => {
+    if (!splitEnabled) return;
+    if (!geometry) return;
+    const st = useMapStore.getState();
+    st.setAnalyzing(true);
+    postAnalyze({ geometry, start_date: splitLeftDate, end_date: splitRightDate })
+      .then((result) => st.setRegionResult(result))
+      .catch(() => st.setRegionResult(null))
+      .finally(() => st.setAnalyzing(false));
+  }, [splitEnabled, splitLeftDate, splitRightDate, geometry]);
 
   const handleDrawCancel = useCallback(() => {
     setDrawMode(false);
@@ -122,7 +151,7 @@ export function MapStage({ children }: MapStageProps) {
       )}
 
       {/* Map surface — its own stacking context (z-0) so Leaflet's internal
-          pane z-indices (up to ~700) never fight the chrome above it. */}
+           pane z-indices (up to ~700) never fight the chrome above it. */}
       <div className="absolute inset-0 z-0">
         <MapView
           drawMode={drawMode}
@@ -133,6 +162,9 @@ export function MapStage({ children }: MapStageProps) {
           onDrawCancel={handleDrawCancel}
         />
       </div>
+
+      {/* Split-screen curtain — floats above the map pane, below evidence */}
+      <SplitSliderOverlay />
 
       {/* Toolbar overlay */}
       <div className="absolute left-4 top-4 z-20 flex items-center gap-1 rounded-hard border border-line bg-void-2/80 p-1 backdrop-blur-sm">

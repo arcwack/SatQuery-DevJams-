@@ -4,6 +4,7 @@ import { PanelRightClose, PanelRightOpen, MessageSquare, X } from "lucide-react"
 import { MissionClock } from "./MissionClock";
 import { LocationSearch } from "./LocationSearch";
 import { CoordRegion } from "./CoordRegion";
+import { TriangleCoordsBar } from "./TriangleCoordsBar";
 
 type HeaderProps = {
   chatOpenMobile: boolean;
@@ -54,7 +55,12 @@ export function Header({
         <div className="hidden md:block">
           <LocationSearch />
         </div>
-        <div className="hidden md:block">
+        {/* Inline 3× Lat/Lon triangle — directly beside search bar on desktop */}
+        <div className="hidden lg:flex">
+          <TriangleCoordsBar />
+        </div>
+        {/* Fallback popover for md only (lg shows inline, md shows button) */}
+        <div className="hidden md:block lg:hidden">
           <CoordRegion />
         </div>
       </div>

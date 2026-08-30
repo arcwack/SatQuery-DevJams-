@@ -51,6 +51,12 @@ interface WorkspaceState {
   timelineStartDate: string | null;
   timelineChange: { water: number; vegetation: number; built_up: number } | null;
   regions: Region[];
+  splitEnabled: boolean;
+  splitPosition: number;
+  splitLeftDate: string;
+  splitRightDate: string;
+  splitLeftYear: number;
+  splitRightYear: number;
 
   setRasters: (rasters: RasterInfo[]) => void;
   setActiveYear: (year: number) => void;
@@ -69,6 +75,13 @@ interface WorkspaceState {
   setTimeline: (narrative: string, startDate: string, change: { water: number; vegetation: number; built_up: number }) => void;
   clearTimeline: () => void;
   addRegion: (region: Region) => void;
+  setSplitEnabled: (enabled: boolean) => void;
+  toggleSplit: () => void;
+  setSplitPosition: (position: number) => void;
+  setSplitDates: (leftDate: string, rightDate: string) => void;
+  setSplitYears: (leftYear: number, rightYear: number) => void;
+  setSplitLeftYear: (year: number) => void;
+  setSplitRightYear: (year: number) => void;
 }
 
 let messageId = 0;
@@ -87,11 +100,17 @@ export const useMapStore = create<WorkspaceState>((set) => ({
   sending: false,
   regionResult: null,
   analyzing: false,
-  activeDate: "",
+  activeDate: "2026-06-15",
   timelineNarrative: null,
   timelineStartDate: null,
   timelineChange: null,
   regions: [],
+  splitEnabled: false,
+  splitPosition: 50,
+  splitLeftDate: "2021-08-27",
+  splitRightDate: "2026-08-27",
+  splitLeftYear: 2021,
+  splitRightYear: 2026,
 
   setRasters: (rasters) => set({ rasters }),
   setActiveYear: (activeYear) => set({ activeYear }),
@@ -112,4 +131,19 @@ export const useMapStore = create<WorkspaceState>((set) => ({
     set({ timelineNarrative, timelineStartDate, timelineChange }),
   clearTimeline: () => set({ timelineNarrative: null, timelineStartDate: null, timelineChange: null }),
   addRegion: (region) => set((s) => ({ regions: [...s.regions, region] })),
+  setSplitEnabled: (splitEnabled) => set({ splitEnabled }),
+  toggleSplit: () => set((s) => ({ splitEnabled: !s.splitEnabled })),
+  setSplitPosition: (splitPosition) => set({ splitPosition: Math.max(5, Math.min(95, splitPosition)) }),
+  setSplitDates: (splitLeftDate, splitRightDate) => set({
+    splitLeftDate, splitRightDate,
+    splitLeftYear: Number(splitLeftDate.slice(0,4)) || 2021,
+    splitRightYear: Number(splitRightDate.slice(0,4)) || 2026,
+  }),
+  setSplitYears: (splitLeftYear, splitRightYear) => set({
+    splitLeftYear, splitRightYear,
+    splitLeftDate: `${splitLeftYear}-08-27`,
+    splitRightDate: `${splitRightYear}-08-27`,
+  }),
+  setSplitLeftYear: (year) => set((s) => ({ splitLeftYear: year, splitLeftDate: `${year}-08-27` })),
+  setSplitRightYear: (year) => set((s) => ({ splitRightYear: year, splitRightDate: `${year}-08-27` })),
 }));

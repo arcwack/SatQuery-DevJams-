@@ -9,6 +9,7 @@ import { getGibsTileUrl, DEFAULT_GIBS_LAYER_ID, type GibsLayerId } from "@/lib/g
 import { useMapStore } from "@/lib/store";
 import { MapControls } from "./MapControls";
 import { RegionLayer, type Region } from "./RegionLayer";
+import { SplitLayers } from "./SplitCurtain";
 
 /**
  * Reticle-style marker matching the Cursor component's "map" state —
@@ -116,6 +117,7 @@ export function MapView({
   onViewChange,
 }: MapViewProps) {
   const activeDate = useMapStore((s) => s.activeDate);
+  const splitEnabled = useMapStore((s) => s.splitEnabled);
   const tileUrl = useMemo(
     () => getGibsTileUrl(gibsLayerId, activeDate || date),
     [gibsLayerId, activeDate, date],
@@ -131,6 +133,7 @@ export function MapView({
       doubleClickZoom={!drawMode}
       className={cn("h-full w-full bg-void", drawMode && "cursor-crosshair", className)}
     >
+      {/* Base layer — always present underneath split; split panes (zIndex 250) cover it when working, fallback if split fails */}
       <TileLayer
         url={tileUrl}
         tileSize={256}
@@ -142,6 +145,7 @@ export function MapView({
         ]}
         attribution="Imagery &copy; NASA EOSDIS GIBS"
       />
+      {splitEnabled && <SplitLayers gibsLayerId={gibsLayerId} />}
 
       <Marker position={ARAL_SEA.center} icon={locationIcon} />
 

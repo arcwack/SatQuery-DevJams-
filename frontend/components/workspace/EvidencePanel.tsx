@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { X, ImageOff, TriangleAlert, Loader } from "lucide-react";
+import { X, ImageOff, TriangleAlert, Loader, Zap } from "lucide-react";
 import { Eyebrow } from "@/components/system/Eyebrow";
 import { GlassPanel } from "@/components/system/GlassPanel";
 import { StatBar } from "@/components/system/StatBar";
@@ -73,9 +73,17 @@ function Summary({ result }: { result: RegionAnalysis }) {
   );
 }
 
+const YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026] as const;
+
 export function EvidencePanel({ open, onClose }: EvidencePanelProps) {
   const regionResult = useMapStore((s) => s.regionResult);
   const analyzing = useMapStore((s) => s.analyzing);
+  const splitEnabled = useMapStore((s) => s.splitEnabled);
+  const splitLeftYear = useMapStore((s) => s.splitLeftYear);
+  const splitRightYear = useMapStore((s) => s.splitRightYear);
+  const setSplitLeftYear = useMapStore((s) => s.setSplitLeftYear);
+  const setSplitRightYear = useMapStore((s) => s.setSplitRightYear);
+  const toggleSplit = useMapStore((s) => s.toggleSplit);
 
   return (
     <AnimatePresence>
@@ -102,6 +110,53 @@ export function EvidencePanel({ open, onClose }: EvidencePanelProps) {
             </div>
 
             <div className="flex flex-1 flex-col overflow-y-auto px-4 py-5">
+              {/* Split-screen toggle — dark glass, spec: [ ⚡ Toggle Split-Screen ] */}
+              <button
+                type="button"
+                onClick={toggleSplit}
+                data-cursor="action"
+                aria-pressed={splitEnabled}
+                className={`flex w-full items-center justify-center gap-2 rounded-hard border px-3 py-2.5 font-mono text-micro uppercase tracking-[0.12em] transition-colors ${
+                  splitEnabled
+                    ? "border-signal-dim bg-signal/15 text-signal"
+                    : "border-line bg-[#05070A]/60 text-ink-dim hover:border-line-bright hover:text-ink"
+                }`}
+              >
+                <Zap size={12} className={splitEnabled ? "text-signal" : "text-ink-faint"} />
+                {splitEnabled ? "Exit Split-Screen" : "⚡ Toggle Split-Screen"}
+              </button>
+
+              {splitEnabled && (
+                <div className="mt-3 mb-4 grid grid-cols-2 gap-2">
+                  <label className="flex flex-col gap-1">
+                    <span className="font-mono text-micro uppercase tracking-[0.1em] text-ink-faint">Left (Baseline)</span>
+                    <select
+                      value={splitLeftYear}
+                      onChange={(e) => setSplitLeftYear(Number(e.target.value))}
+                      data-cursor="action"
+                      className="w-full rounded-hard border border-line bg-void-2 px-2 py-1.5 font-mono text-small text-ink focus:border-signal-dim focus:outline-none"
+                    >
+                      {YEARS.map((y) => (
+                        <option key={y} value={y}>{y} — {y}-08-27</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="font-mono text-micro uppercase tracking-[0.1em] text-ink-faint">Right (Current)</span>
+                    <select
+                      value={splitRightYear}
+                      onChange={(e) => setSplitRightYear(Number(e.target.value))}
+                      data-cursor="action"
+                      className="w-full rounded-hard border border-line bg-void-2 px-2 py-1.5 font-mono text-small text-ink focus:border-signal-dim focus:outline-none"
+                    >
+                      {YEARS.map((y) => (
+                        <option key={y} value={y}>{y} — {y}-08-27</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              )}
+
               {analyzing ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-3 py-6 text-center">
                   <Loader size={16} className="animate-spin text-signal" />
