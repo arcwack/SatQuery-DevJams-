@@ -67,6 +67,9 @@ function MapBridge({
 
   useEffect(() => {
     onReady?.(map);
+    // Expose the map instance to the store so global controls (location
+    // search, coordinate drawing) can fly the view.
+    useMapStore.getState().setMap(map);
     // Re-skin the one piece of default Leaflet chrome we keep — move
     // attribution out of MapControls' corner and drop the "Leaflet |"
     // prefix so it reads as a single quiet credit line.
