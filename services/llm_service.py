@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+import httpx
 from dotenv import load_dotenv
 from google import genai
 from google.genai import errors
@@ -17,7 +18,8 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 logger = logging.getLogger(__name__)
 
-MODEL = "gemini-3.6-flash"
+MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-3-5-haiku-20241022")
 TEMPERATURE = 0.2
 
 REJECTION = (
@@ -107,13 +109,51 @@ def _parse_json(text: str) -> dict[str, Any]:
     raise ValueError("Model did not return valid JSON")
 
 
+def _call_claude(system_prompt: str, user_content: str) -> str:
+    """Call Claude API and return text response."""
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY is not set.")
+    headers = {
+        "x-api-key": api_key,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+    }
+    body = {
+        "model": CLAUDE_MODEL,
+        "max_tokens": 1024,
+        "system": system_prompt,
+        "messages": [{"role": "user", "content": user_content}],
+    }
+    resp = httpx.post(
+        "https://api.anthropic.com/v1/messages", headers=headers, json=body, timeout=30
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    text = "".join(block.get("text", "") for block in data.get("content", []) if block.get("type") == "text")
+    if not text:
+        raise ValueError("Claude returned empty response")
+    return text
+
+
 def interpret_query(user_query: str) -> dict[str, Any]:
     """Interpret a plain-language query into a structured operation decision.
 
+    Tries Claude first if ANTHROPIC_API_KEY is set, falls back to Gemini.
     Returns a dict with keys: operation, classes, start_date, end_date, and
     optionally reason/message. Raises RuntimeError on model failure.
     """
     content = f"User query:\n{user_query.strip() or DEFAULT_PROMPT}"
+
+    # Try Claude first
+    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+    if anthropic_key:
+        try:
+            text = _call_claude(SYSTEM_PROMPT, content)
+            return _parse_json(text)
+        except Exception as exc:
+            logger.warning(f"Claude interpret failed, falling back to Gemini: {exc}")
+
     try:
         response = _get_client().models.generate_content(
             model=MODEL,

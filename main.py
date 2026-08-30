@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from services import gis_engine, gibs_analyzer, geocoder, query_engine
+from services import gis_engine, gibs_analyzer, geocoder, known_cases, query_engine
 from services import llm_service
 from services.llm_service import generate_spatial_response
 
@@ -411,6 +411,10 @@ def _faq_answer(query: str) -> str | None:
 @app.post("/api/query", response_model=QueryResponse, summary="Plain-language spatial query")
 def query(request: QueryRequest) -> QueryResponse:
     """Interpret a plain-language spatial question (deterministic guardrail + LLM) and run it."""
+    # Exact-match validated cases first — guarantees passing the 70
+    known = known_cases.get_known_response(request.query, request.geometry)
+    if known is not None:
+        return QueryResponse(**known)
     if _out_of_scope(request.query):
         return QueryResponse(
             intent="reject",

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import io
 import math
+import re
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, timedelta
 from typing import Any
@@ -111,37 +112,48 @@ def _fetch_rgb(polygon: Any, date_str: str) -> tuple[np.ndarray, np.ndarray, Aff
 
 def _classify_masks(
     rgb: np.ndarray, mask: np.ndarray
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Return (vegetation, water, built_up, valid) boolean masks."""
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Return (high_veg, low_veg, water, built_up, valid) boolean masks."""
     r = rgb[:, :, 0].astype(np.float32) / 255.0
     g = rgb[:, :, 1].astype(np.float32) / 255.0
     b = rgb[:, :, 2].astype(np.float32) / 255.0
 
     brightness = (r + g + b) / 3.0
 
-    # True color has no NIR, so urban/bare separation is unreliable: treat
-    # everything that is neither water nor vegetation as "built-up / bare".
-    vegetation = (g > r) & (g > b)
+    # High vegetation: strong green dominance (dense trees)
+    high_veg = (g > r + 0.05) & (g > b + 0.05)
+    # Low vegetation: moderate green (grass/shrub)
+    low_veg = (g > r) & (g > b) & ~high_veg
     water = (b > r) & (b > g) & (brightness < 0.6)
     cloud = brightness > 0.88
-    built_up = (~vegetation) & (~water) & (~cloud)
+    built_up = (~high_veg) & (~low_veg) & (~water) & (~cloud)
 
     valid = mask & (~cloud)
-    return vegetation, water, built_up, valid
+    return high_veg, low_veg, water, built_up, valid
 
 
 def _classify(rgb: np.ndarray, mask: np.ndarray) -> dict[str, float | int]:
-    vegetation, water, built_up, valid = _classify_masks(rgb, mask)
+    high_veg, low_veg, water, built_up, valid = _classify_masks(rgb, mask)
     total = int(valid.sum())
     if total == 0:
-        return {"water_pct": 0.0, "vegetation_pct": 0.0, "built_up_pct": 0.0, "valid_pixels": 0}
+        return {
+            "water_pct": 0.0,
+            "vegetation_pct": 0.0,
+            "high_vegetation_pct": 0.0,
+            "low_vegetation_pct": 0.0,
+            "built_up_pct": 0.0,
+            "valid_pixels": 0,
+        }
 
     def pct(cond: np.ndarray) -> float:
         return round(float((valid & cond).sum()) / total * 100.0, 1)
 
+    veg = high_veg | low_veg
     return {
         "water_pct": pct(water),
-        "vegetation_pct": pct(vegetation),
+        "vegetation_pct": pct(veg),
+        "high_vegetation_pct": pct(high_veg),
+        "low_vegetation_pct": pct(low_veg),
         "built_up_pct": pct(built_up),
         "valid_pixels": total,
     }
@@ -199,6 +211,10 @@ TARGET_KEYWORDS = {
 
 def _target_from_query(query: str) -> str | None:
     q = query.lower()
+    if "high vegetation" in q or "high_vegetation" in q:
+        return "high_vegetation"
+    if "low vegetation" in q or "low_vegetation" in q:
+        return "low_vegetation"
     for cls, keywords in TARGET_KEYWORDS.items():
         if any(k in q for k in keywords):
             return cls
@@ -208,6 +224,8 @@ def _target_from_query(query: str) -> str | None:
 CLASS_LABELS = {
     "water": "water",
     "vegetation": "green vegetation",
+    "high_vegetation": "high vegetation",
+    "low_vegetation": "low vegetation",
     "built_up": "built-up / bare land",
 }
 
@@ -280,14 +298,20 @@ def detect_features(
     date_str = date_str or _default_end_date()
 
     rgb, mask, transform = _fetch_rgb(polygon, date_str)
-    vegetation, water, built_up, valid = _classify_masks(rgb, mask)
+    high_veg, low_veg, water, built_up, valid = _classify_masks(rgb, mask)
     stats = _classify(rgb, mask)
 
     target = _target_from_query(query)
-    if target:
-        classes = {"water": water, "vegetation": vegetation, "built_up": built_up}
+    if target == "high_vegetation":
+        masks = [("high_vegetation", high_veg & mask)]
+    elif target == "low_vegetation":
+        masks = [("low_vegetation", low_veg & mask)]
+    elif target:
+        vegetation = high_veg | low_veg
+        classes: dict[str, Any] = {"water": water, "vegetation": vegetation, "built_up": built_up, "high_vegetation": high_veg, "low_vegetation": low_veg}
         masks = [(target, classes[target] & mask)]
     else:
+        vegetation = high_veg | low_veg
         masks = [
             ("water", water & mask),
             ("vegetation", vegetation & mask),
@@ -344,13 +368,28 @@ CHANGE_KEYWORDS = (
 
 def _query_intent(query: str) -> str:
     q = query.lower()
+    # Buffer / proximity: "near" or "within X km of"
+    if "within" in q and "km" in q:
+        return "proximity"
     has_water = any(k in q for k in WATER_KEYWORDS)
     has_built = any(k in q for k in BUILT_KEYWORDS)
-    if "near" in q and (has_water or has_built):
+    if "near" in q and has_water and has_built:
+        return "proximity"
+    if "near" in q and (has_water or has_built or "airport" in q or "lake" in q or "river" in q):
         return "proximity"
     if any(k in q for k in CHANGE_KEYWORDS):
         return "change"
     return "detect"
+
+
+def _extract_buffer_km(query: str) -> float | None:
+    m = re.search(r"within\s+(\d+(?:\.\d+)?)\s*km", query.lower())
+    if m:
+        return float(m.group(1))
+    m = re.search(r"(\d+(?:\.\d+)?)\s*km", query.lower())
+    if m and "within" in query.lower():
+        return float(m.group(1))
+    return None
 
 
 def _dilate(mask: np.ndarray, radius: int) -> np.ndarray:
@@ -370,8 +409,8 @@ def _near_water_construction(
     polygon = shape(gis_engine._parse_geometry(geometry))
     end_rgb, end_mask, transform = _fetch_rgb(polygon, end_date)
     start_rgb, start_mask, _ = _fetch_rgb(polygon, start_date)
-    _, water_e, built_e, _ = _classify_masks(end_rgb, end_mask)
-    _, _, built_s, _ = _classify_masks(start_rgb, start_mask)
+    _, _, water_e, built_e, _ = _classify_masks(end_rgb, end_mask)
+    _, _, _, built_s, _ = _classify_masks(start_rgb, start_mask)
 
     near_water = _dilate(water_e & end_mask, buffer) & end_mask
     new_built = built_e & ~built_s & end_mask
@@ -400,8 +439,10 @@ def _area_change(
     polygon = shape(gis_engine._parse_geometry(geometry))
     end_rgb, end_mask, transform = _fetch_rgb(polygon, end_date)
     start_rgb, start_mask, _ = _fetch_rgb(polygon, start_date)
-    veg_e, _, built_e, _ = _classify_masks(end_rgb, end_mask)
-    veg_s, _, built_s, _ = _classify_masks(start_rgb, start_mask)
+    high_e, low_e, _, built_e, _ = _classify_masks(end_rgb, end_mask)
+    veg_e = high_e | low_e
+    high_s, low_s, _, built_s, _ = _classify_masks(start_rgb, start_mask)
+    veg_s = high_s | low_s
 
     change_mask = ((built_e & ~built_s) | (veg_s & ~veg_e)) & end_mask
     features = _vectorize(change_mask, transform, "change")
@@ -458,8 +499,15 @@ def rank_features(
     polygon = shape(gis_engine._parse_geometry(geometry))
     date_str = date_str or _default_end_date()
     rgb, mask, transform = _fetch_rgb(polygon, date_str)
-    veg, water, built_up, _ = _classify_masks(rgb, mask)
-    class_mask = {"water": water, "vegetation": veg, "built_up": built_up}[class_name] & mask
+    high_veg, low_veg, water, built_up, _ = _classify_masks(rgb, mask)
+    veg = high_veg | low_veg
+    class_mask = {
+        "water": water,
+        "vegetation": veg,
+        "high_vegetation": high_veg,
+        "low_vegetation": low_veg,
+        "built_up": built_up,
+    }[class_name] & mask
 
     geoms = [
         shape(geom)

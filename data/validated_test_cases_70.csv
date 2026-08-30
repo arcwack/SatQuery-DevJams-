@@ -1,0 +1,71 @@
+test_id,user_query,category,comparison_type,metric,validated_reference_value,tolerance_percent,reference_source
+1,Find water bodies in Chennai,feature_detection,numeric,water_area_km2,265.01,5,REPLACE: independent validated water reference
+2,Show high vegetation areas in Chennai,feature_detection,numeric,high_vegetation_area_km2,112.5,5,REPLACE: independent land-cover reference
+3,Show low vegetation areas in Chennai,feature_detection,numeric,low_vegetation_area_km2,84.7,5,REPLACE: independent land-cover reference
+4,Show built-up areas in Chennai,feature_detection,numeric,built_up_area_km2,426.3,5,REPLACE: independent land-cover reference
+5,Find the largest water body in Chennai,feature_detection,categorical,largest_water_body,Bay of Bengal,,REPLACE: independent water-body reference
+6,Highlight Porur Lake,feature_detection,categorical,feature_type,water_body,,REPLACE: authoritative feature reference
+7,Show all major lakes in Chennai,feature_detection,categorical,feature,lakes,,REPLACE: authoritative hydrography reference
+8,What is visible in the selected image?,feature_detection,categorical,operation,detect_and_summarize,,REPLACE: manually labelled/reference interpretation
+9,Find vegetation in the selected area,feature_detection,categorical,analysis_method,NDVI,,GIS analysis specification
+10,Show recent satellite imagery,feature_detection,categorical,operation,retrieve_recent_clear_imagery,,Dataset/workflow specification
+11,Show areas within 2 km of Puzhal Lake,spatial,numeric,buffer_distance_km,2,0.01,GIS geometry specification
+12,Show areas within 3 km of Chennai Airport,spatial,numeric,buffer_distance_km,3,0.01,GIS geometry specification
+13,Highlight areas near the river,spatial,categorical,spatial_operation,buffer,,GIS workflow specification
+14,Show features inside the selected region,spatial,categorical,spatial_operation,intersection,,GIS workflow specification
+15,Find the nearest water body to this point,spatial,categorical,spatial_operation,nearest_neighbor,,GIS workflow specification
+16,Show areas north of Chembarambakkam Lake,spatial,categorical,spatial_relation,north_of,,GIS workflow specification
+17,Show areas south of Puzhal Lake,spatial,categorical,spatial_relation,south_of,,GIS workflow specification
+18,Find features intersecting the selected polygon,spatial,categorical,spatial_operation,intersection,,GIS workflow specification
+19,Show vegetation around Chembarambakkam Lake,spatial,categorical,analysis_method,NDVI,,GIS workflow specification
+20,Highlight water bodies larger than 5 sq km,spatial,numeric,minimum_area_km2,5,5,Query constraint / independent geometry
+21,Show vegetation change between 2020 and 2025,temporal,numeric,vegetation_change_percent,-27,10,REPLACE: independent temporal reference analysis
+22,Identify areas where vegetation decreased,temporal,categorical,change_type,decrease,,REPLACE: independent temporal reference analysis
+23,Show water-body changes over time,temporal,numeric,water_change_percent,-8.5,10,REPLACE: independent temporal reference analysis
+24,Compare built-up area between 2020 and 2025,temporal,numeric,built_up_change_percent,41,10,REPLACE: independent temporal reference analysis
+25,Find the largest land-cover change,temporal,categorical,largest_change_class,built_up,,REPLACE: independent change reference
+26,Show changes from 2018 to 2026,temporal,categorical,operation,multi_year_change_detection,,GIS workflow specification
+27,Show where water increased between 2021 and 2024,temporal,categorical,change_type,increase,,REPLACE: independent temporal reference analysis
+28,Compare vegetation around two lakes over time,temporal,numeric,vegetation_difference_percent,14.2,10,REPLACE: independent temporal reference analysis
+29,Show the most recent major change,temporal,categorical,operation,recent_change_detection,,GIS workflow specification
+30,Show before and after imagery for this area,temporal,categorical,operation,before_after_comparison,,GIS workflow specification
+31,Analyse flooding in cloudy conditions,workflow,categorical,dataset,Sentinel-1 SAR,,Dataset selection specification
+32,Show recent vegetation,workflow,categorical,analysis_method,NDVI,,GIS workflow specification
+33,Analyse historical land changes,workflow,categorical,analysis_method,change_detection,,GIS workflow specification
+34,Show terrain and slope,workflow,categorical,dataset,DEM,,Dataset selection specification
+35,Find recent water changes,workflow,categorical,analysis_method,NDWI_change_detection,,GIS workflow specification
+36,Find water bodies using optical imagery,workflow,categorical,dataset,Sentinel-2,,Dataset selection specification
+37,Analyse vegetation health,workflow,categorical,analysis_method,NDVI,,GIS workflow specification
+38,Detect water using a water index,workflow,categorical,analysis_method,NDWI_or_MNDWI,,GIS workflow specification
+39,Analyse urban expansion,workflow,categorical,operation,built_up_change_detection,,GIS workflow specification
+40,Find unusual land changes automatically,workflow,categorical,operation,change_detection_plus_alert,,System workflow specification
+41,Show areas near the river where construction increased,complex,categorical,workflow,built_up_change+buffer+intersection,,GIS workflow specification
+42,Find areas where vegetation decreased near water bodies,complex,categorical,workflow,NDVI_change+water_proximity+intersection,,GIS workflow specification
+43,Show low vegetation areas within 3 km of the airport,complex,categorical,workflow,NDVI+3km_buffer+intersection,,GIS workflow specification
+44,Find new construction near lakes between 2020 and 2025,complex,categorical,workflow,built_up_change+lake_buffer+intersection,,GIS workflow specification
+45,Show water loss near urban areas,complex,categorical,workflow,water_change+built_up_proximity+intersection,,GIS workflow specification
+46,Find areas where vegetation increased after 2022,complex,categorical,workflow,NDVI_change+post_2022_filter,,GIS workflow specification
+47,Show major land changes within the selected boundary,complex,categorical,workflow,change_detection+ROI_filter,,GIS workflow specification
+48,Find flooded areas near settlements,complex,categorical,workflow,flood_detection+settlement_proximity+intersection,,GIS workflow specification
+49,Compare water and vegetation change in this region,complex,categorical,workflow,NDWI_change+NDVI_change+comparison,,GIS workflow specification
+50,Show places where built-up area replaced vegetation,complex,categorical,workflow,built_up_gain+vegetation_loss+intersection,,GIS workflow specification
+51,Summarize the selected region,roi_summary,numeric,water_area_km2,12.4,5,REPLACE: independent validated ROI result
+52,How much vegetation is inside this boundary?,roi_summary,numeric,vegetation_area_km2,18.7,5,REPLACE: independent validated ROI result
+53,Calculate the built-up area inside this polygon,roi_summary,numeric,built_up_area_km2,22.1,5,REPLACE: independent validated ROI result
+54,Calculate the total area of the selected region,roi_summary,numeric,total_area_km2,50,0.01,Validated geometry calculation
+55,Find the percentage of water in this region,roi_summary,numeric,water_percent,24.8,5,REPLACE: independent validated ROI result
+56,Find the percentage of vegetation in this region,roi_summary,numeric,vegetation_percent,37.4,5,REPLACE: independent validated ROI result
+57,Show the dominant land-cover type,roi_summary,categorical,dominant_land_cover,built_up,,REPLACE: independent land-cover reference
+58,Has this selected region changed significantly?,roi_summary,categorical,change_significance,significant,,REPLACE: independent temporal validation
+59,Calculate average NDVI in this region,roi_summary,numeric,mean_ndvi,0.46,5,REPLACE: independently recomputed reference
+60,Calculate total water area in hectares,roi_summary,numeric,water_area_hectares,1240,5,REPLACE: independent validated ROI result
+61,Check this area for unusual vegetation loss,alert,numeric,vegetation_change_percent,-20,10,REPLACE: independent temporal reference analysis
+62,Check this area for unusual water loss,alert,numeric,water_change_percent,-15,10,REPLACE: independent temporal reference analysis
+63,Is there significant new construction here?,alert,numeric,built_up_change_percent,22,10,REPLACE: independent temporal reference analysis
+64,Flag locations with major recent change,alert,categorical,operation,detect_rank_and_flag_changes,,System workflow specification
+65,What changed here compared with last year?,contextual,categorical,operation,one_year_change_detection,,GIS workflow specification
+66,Now show hospitals within 2 km of it,contextual,categorical,context_resolution,previous_feature,,Conversation-state specification
+67,Zoom to the largest detected water body,contextual,categorical,map_action,highlight_and_zoom,,Map action specification
+68,Show me the source image used for this result,contextual,categorical,map_action,show_source_imagery_metadata,,Transparency workflow specification
+69,Explain how you calculated this result,contextual,categorical,map_action,show_analysis_metadata,,Transparency workflow specification
+70,Show the detected result against the reference layer,contextual,categorical,map_action,overlay_comparison,,Validation workflow specification
