@@ -40,6 +40,10 @@ interface WorkspaceState {
   sending: boolean;
   regionResult: RegionAnalysis | null;
   analyzing: boolean;
+  activeDate: string;
+  timelineNarrative: string | null;
+  timelineStartDate: string | null;
+  timelineChange: { water: number; vegetation: number; built_up: number } | null;
 
   setRasters: (rasters: RasterInfo[]) => void;
   setActiveYear: (year: number) => void;
@@ -54,6 +58,9 @@ interface WorkspaceState {
   setSending: (sending: boolean) => void;
   setRegionResult: (result: RegionAnalysis | null) => void;
   setAnalyzing: (analyzing: boolean) => void;
+  setActiveDate: (date: string) => void;
+  setTimeline: (narrative: string, startDate: string, change: { water: number; vegetation: number; built_up: number }) => void;
+  clearTimeline: () => void;
 }
 
 let messageId = 0;
@@ -72,6 +79,10 @@ export const useMapStore = create<WorkspaceState>((set) => ({
   sending: false,
   regionResult: null,
   analyzing: false,
+  activeDate: "",
+  timelineNarrative: null,
+  timelineStartDate: null,
+  timelineChange: null,
 
   setRasters: (rasters) => set({ rasters }),
   setActiveYear: (activeYear) => set({ activeYear }),
@@ -87,4 +98,8 @@ export const useMapStore = create<WorkspaceState>((set) => ({
   setSending: (sending) => set({ sending }),
   setRegionResult: (regionResult) => set({ regionResult }),
   setAnalyzing: (analyzing) => set({ analyzing }),
+  setActiveDate: (activeDate) => set({ activeDate }),
+  setTimeline: (timelineNarrative, timelineStartDate, timelineChange) =>
+    set({ timelineNarrative, timelineStartDate, timelineChange }),
+  clearTimeline: () => set({ timelineNarrative: null, timelineStartDate: null, timelineChange: null }),
 }));

@@ -5,7 +5,8 @@ import { SendHorizontal, Sparkles } from "lucide-react";
 import { Eyebrow } from "@/components/system/Eyebrow";
 import { GlassPanel } from "@/components/system/GlassPanel";
 import { useMapStore } from "@/lib/store";
-import { detectFeatures, type GeoJSONGeometry } from "@/lib/api";
+import { detectFeatures } from "@/lib/api";
+import { viewGeometry } from "@/lib/geo";
 
 const SUGGESTED_PROMPTS = [
   "What's visible here?",
@@ -13,29 +14,6 @@ const SUGGESTED_PROMPTS = [
   "Highlight vegetation",
   "Highlight built-up areas",
 ];
-
-/** Build a Polygon covering the current map viewport (used when nothing is drawn). */
-function mapViewGeometry(): GeoJSONGeometry | null {
-  const map = useMapStore.getState().map;
-  if (!map) return null;
-  const b = map.getBounds();
-  const w = b.getWest();
-  const s = b.getSouth();
-  const e = b.getEast();
-  const n = b.getNorth();
-  return {
-    type: "Polygon",
-    coordinates: [
-      [
-        [w, s],
-        [e, s],
-        [e, n],
-        [w, n],
-        [w, s],
-      ],
-    ],
-  };
-}
 
 /**
  * Fixed instrument dock. Sends plain-language queries to /api/detect, which
@@ -58,7 +36,7 @@ export function ChatPanel() {
     addMessage("user", query);
 
     const state = useMapStore.getState();
-    const geometry = state.geometry ?? mapViewGeometry();
+    const geometry = state.geometry ?? viewGeometry();
     if (!geometry) {
       addMessage("assistant", "Map not ready yet — try again in a moment.");
       return;

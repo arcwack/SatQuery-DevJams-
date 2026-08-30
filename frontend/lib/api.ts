@@ -73,8 +73,13 @@ export interface QueryResult {
 
 export interface TimelineResult {
   narrative: string;
-  diff: ChangeDiff;
-  geometry: GeoJSONGeometry;
+  start_date: string;
+  end_date: string;
+  water_pct: number;
+  vegetation_pct: number;
+  built_up_pct: number;
+  changed: boolean;
+  change: { water: number; vegetation: number; built_up: number };
 }
 
 export interface RegionSummary {
@@ -173,7 +178,11 @@ export function postQuery(body: QueryBody): Promise<QueryResult> {
   return postJSON<QueryResult>("/api/query", body);
 }
 
-export function postTimeline(body: QueryBody): Promise<TimelineResult> {
+export function postTimeline(body: {
+  geometry: GeoJSONGeometry;
+  start_date?: string;
+  end_date?: string;
+}): Promise<TimelineResult> {
   return postJSON<TimelineResult>("/api/timeline", body);
 }
 

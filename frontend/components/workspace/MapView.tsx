@@ -112,7 +112,11 @@ export function MapView({
   onReady,
   onViewChange,
 }: MapViewProps) {
-  const tileUrl = useMemo(() => getGibsTileUrl(gibsLayerId, date), [gibsLayerId, date]);
+  const activeDate = useMapStore((s) => s.activeDate);
+  const tileUrl = useMemo(
+    () => getGibsTileUrl(gibsLayerId, activeDate || date),
+    [gibsLayerId, activeDate, date],
+  );
 
   return (
     <MapContainer
