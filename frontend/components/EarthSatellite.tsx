@@ -7,8 +7,8 @@
  * arcs. All motion is disabled under prefers-reduced-motion.
  */
 
-const MINT = "#00E5FF";
-const CYAN = "#7FF7FF";
+const MINT = "#8CFFBE";
+const CYAN = "#22D3EE";
 const AMBER = "#f2b632";
 
 const BUS = { w: 170, h: 104, d: 66 };
