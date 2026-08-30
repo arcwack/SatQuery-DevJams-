@@ -1,15 +1,5 @@
 @import "tailwindcss";
 
-/* Self-hosted typefaces — no external requests at runtime. */
-@import "@fontsource/space-grotesk/500.css";
-@import "@fontsource/space-grotesk/600.css";
-@import "@fontsource/space-grotesk/700.css";
-@import "@fontsource/inter/400.css";
-@import "@fontsource/inter/500.css";
-@import "@fontsource/inter/600.css";
-@import "@fontsource/ibm-plex-mono/400.css";
-@import "@fontsource/ibm-plex-mono/500.css";
-
 /* Leaflet's base stylesheet — required for tile/pane layout math to work
    at all. Re-skinned to the void/ink/signal palette below; see the
    LEAFLET OVERRIDES section. */
