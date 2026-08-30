@@ -20,12 +20,12 @@ export function SatelliteBackdrop() {
 
       {/* Dark film overlay — dials true-color toward a night look */}
       <div className="absolute inset-0 bg-[#02040a]/60" />
-      {/* Edge vignette + left-side darkening so hero text stays legible */}
+      {/* Left-side darkening so hero text stays legible; vignette at edges */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(to right, var(--color-void) 0%, rgba(5,7,11,0.5) 42%, transparent 64%), radial-gradient(ellipse 95% 85% at 55% 45%, transparent 45%, rgba(2,4,10,0.85) 100%)",
+            "linear-gradient(to right, rgba(5,7,10,0.95) 0%, rgba(5,7,11,0.8) 28%, rgba(5,7,11,0.35) 55%, transparent 74%), radial-gradient(ellipse 95% 85% at 55% 45%, transparent 45%, rgba(2,4,10,0.9) 100%)",
         }}
       />
     </div>

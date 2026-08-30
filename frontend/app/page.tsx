@@ -19,11 +19,11 @@ export default function Home() {
   const { scrollYProgress } = useScroll();
   const x = useTransform(
     scrollYProgress,
-    [0, 0.25, 0.5, 0.75, 1],
-    ["70vw", "20vw", "70vw", "20vw", "70vw"],
+    [0, 0.28, 0.56, 0.82, 1],
+    ["52vw", "10vw", "52vw", "10vw", "40vw"],
   );
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1.15, 1.35, 1.15]);
-  const rotate = useTransform(scrollYProgress, [0, 1], [0, 60]);
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1.1, 1.3, 1.1]);
+  const rotate = useTransform(scrollYProgress, [0, 1], [0, 45]);
 
   return (
     <main className="relative min-h-dvh overflow-x-hidden bg-void text-ink">
@@ -56,7 +56,7 @@ export default function Home() {
 
         {/* Hero */}
         <section className="flex min-h-[calc(100svh-3rem)] items-center px-6 sm:px-10">
-          <div className="max-w-md md:-ml-[4vw]">
+          <div className="max-w-xl">
             <p className="text-small leading-relaxed text-ink">
               Ask questions about satellite imagery. Get answers directly on the map.
             </p>
@@ -67,7 +67,7 @@ export default function Home() {
             >
               Enter workspace →
             </Link>
-            <h1 className="mt-8 font-display text-display-sm font-semibold uppercase leading-[0.98] tracking-tight text-ink sm:text-display-lg">
+            <h1 className="mt-8 font-display text-4xl font-semibold uppercase leading-[1.02] tracking-tight text-ink sm:text-5xl lg:text-6xl">
               Talk to the earth.
               <br />
               Understand

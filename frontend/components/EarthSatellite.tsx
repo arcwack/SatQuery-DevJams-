@@ -13,14 +13,15 @@ const AMBER = "#f2b632";
 
 const BUS = { w: 170, h: 104, d: 66 };
 
-// Realistic satellite: a gold-foil "bus" body with dark photovoltaic wings.
+// Realistic satellite: a foil-wrapped bus body with photovoltaic wings,
+// kept in the site's mint-green palette.
 const FACES = [
-  { key: "front", w: BUS.w, h: BUS.h, t: `translate(-50%,-50%) translateZ(${BUS.d / 2}px)`, bg: "linear-gradient(135deg, #d8b24a, #9a7424)" },
-  { key: "back", w: BUS.w, h: BUS.h, t: `translate(-50%,-50%) rotateY(180deg) translateZ(${BUS.d / 2}px)`, bg: "linear-gradient(135deg, #8a6220, #5c4116)" },
-  { key: "left", w: BUS.d, h: BUS.h, t: `translate(-50%,-50%) rotateY(-90deg) translateZ(${BUS.w / 2}px)`, bg: "linear-gradient(135deg, #b8913a, #7c5c1e)" },
-  { key: "right", w: BUS.d, h: BUS.h, t: `translate(-50%,-50%) rotateY(90deg) translateZ(${BUS.w / 2}px)`, bg: "linear-gradient(135deg, #c7a243, #8a6622)" },
-  { key: "top", w: BUS.w, h: BUS.d, t: `translate(-50%,-50%) rotateX(90deg) translateZ(${BUS.h / 2}px)`, bg: "linear-gradient(135deg, #e0be52, #ab7f2b)" },
-  { key: "bottom", w: BUS.w, h: BUS.d, t: `translate(-50%,-50%) rotateX(-90deg) translateZ(${BUS.h / 2}px)`, bg: "linear-gradient(135deg, #6b4d18, #3f2d0d)" },
+  { key: "front", w: BUS.w, h: BUS.h, t: `translate(-50%,-50%) translateZ(${BUS.d / 2}px)`, bg: "linear-gradient(135deg, #b7ecd0, #6fbf8e)" },
+  { key: "back", w: BUS.w, h: BUS.h, t: `translate(-50%,-50%) rotateY(180deg) translateZ(${BUS.d / 2}px)`, bg: "linear-gradient(135deg, #5c9f74, #356b4c)" },
+  { key: "left", w: BUS.d, h: BUS.h, t: `translate(-50%,-50%) rotateY(-90deg) translateZ(${BUS.w / 2}px)`, bg: "linear-gradient(135deg, #8fd4ab, #4f9a6e)" },
+  { key: "right", w: BUS.d, h: BUS.h, t: `translate(-50%,-50%) rotateY(90deg) translateZ(${BUS.w / 2}px)`, bg: "linear-gradient(135deg, #a5e0c0, #5aa87c)" },
+  { key: "top", w: BUS.w, h: BUS.d, t: `translate(-50%,-50%) rotateX(90deg) translateZ(${BUS.h / 2}px)`, bg: "linear-gradient(135deg, #c6f2da, #83c9a0)" },
+  { key: "bottom", w: BUS.w, h: BUS.d, t: `translate(-50%,-50%) rotateX(-90deg) translateZ(${BUS.h / 2}px)`, bg: "linear-gradient(135deg, #356b4c, #1c3a28)" },
 ];
 
 const MINT_PATH = "M 40 410 C 180 370, 250 190, 470 130";
@@ -63,9 +64,9 @@ function SolarArray({ side }: { side: "left" | "right" }) {
           top: "50%",
           width: 150,
           height: 190,
-          border: "1px solid rgba(34,211,238,0.35)",
+          border: "1px solid rgba(140,255,190,0.30)",
           background:
-            "linear-gradient(rgba(34,211,238,0.20) 1px, transparent 1px) 0 0 / 12px 12px, linear-gradient(90deg, rgba(34,211,238,0.20) 1px, transparent 1px) 0 0 / 12px 12px, linear-gradient(135deg, #0b2447, #071829)",
+            "linear-gradient(rgba(140,255,190,0.16) 1px, transparent 1px) 0 0 / 12px 12px, linear-gradient(90deg, rgba(140,255,190,0.16) 1px, transparent 1px) 0 0 / 12px 12px, linear-gradient(135deg, #0e241a, #0a1a12)",
           transform: `translate(-50%,-50%) translateX(${sign * offset}px) rotateY(90deg) rotateZ(${sign * 3}deg)`,
         }}
       />
