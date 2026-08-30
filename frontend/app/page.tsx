@@ -2,6 +2,7 @@ import Link from "next/link";
 import { EarthScene3D } from "@/components/EarthScene3D";
 import { LiveCoordinates } from "@/components/LiveCoordinates";
 import { ScrollSection, ScrollStory } from "@/components/ScrollStory";
+import { FeatureSections } from "@/components/FeatureSections";
 import { Eyebrow } from "@/components/system/Eyebrow";
 
 const FUN_FACTS = [
@@ -56,12 +57,10 @@ export default function Home() {
             </div>
           </ScrollSection>
 
-          <ScrollSection index={2} label="SECTION 02 // CORE DEMO" />
-          <ScrollSection index={3} label="SECTION 03 // CHANGE DETECTION" />
-          <ScrollSection index={4} label="SECTION 04 // GROUND TRUTH" />
+          <FeatureSections />
 
-          {/* Fun facts / section 05 */}
-          <ScrollSection index={5} label="SECTION 05 // PLANETARY SIGNAL" className="items-start pt-24">
+          {/* Fun facts / section 06 */}
+          <ScrollSection index={6} label="SECTION 06 // PLANETARY SIGNAL" className="items-start pt-24">
             <div className="w-full">
               <Eyebrow tone="signal">Did you know?</Eyebrow>
               <h2 className="mt-4 font-display text-section font-semibold text-ink">
