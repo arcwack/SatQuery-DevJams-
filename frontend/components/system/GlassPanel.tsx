@@ -37,7 +37,7 @@ export function GlassPanel({
       {...props}
     >
       {scanlines && <NoiseOverlay variant="scanlines" />}
-      <div className="relative">{children}</div>
+      <div className="relative flex h-full min-h-0 flex-1 flex-col">{children}</div>
     </div>
   );
 }

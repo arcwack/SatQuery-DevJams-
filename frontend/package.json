@@ -17,6 +17,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^13.1.1",
     "html2canvas": "^1.4.1",
+    "html2canvas-pro": "^2.4.0",
     "jspdf": "^4.2.1",
     "leaflet": "^1.9.4",
     "leaflet-side-by-side": "^2.2.0",

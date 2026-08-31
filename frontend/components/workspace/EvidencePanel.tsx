@@ -1,12 +1,15 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { X, ImageOff, TriangleAlert, Loader, Zap } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { X, ImageOff, TriangleAlert, Loader, Zap, FileDown } from "lucide-react";
 import { Eyebrow } from "@/components/system/Eyebrow";
 import { GlassPanel } from "@/components/system/GlassPanel";
 import { StatBar } from "@/components/system/StatBar";
 import { useMapStore } from "@/lib/store";
 import type { RegionAnalysis } from "@/lib/api";
+import { ReportTemplate } from "./ReportTemplate";
+import { usePdfExport } from "@/lib/usePdfExport";
 
 type EvidencePanelProps = {
   open: boolean;
@@ -84,6 +87,33 @@ export function EvidencePanel({ open, onClose }: EvidencePanelProps) {
   const setSplitLeftYear = useMapStore((s) => s.setSplitLeftYear);
   const setSplitRightYear = useMapStore((s) => s.setSplitRightYear);
   const toggleSplit = useMapStore((s) => s.toggleSplit);
+  const geometry = useMapStore((s) => s.geometry);
+  const timelineNarrative = useMapStore((s) => s.timelineNarrative);
+  const activeDate = useMapStore((s) => s.activeDate);
+  const evidence = useMapStore((s) => s.evidence);
+  const map = useMapStore((s) => s.map);
+  const reportRef = useRef<HTMLDivElement>(null);
+  const [mapSnapshot, setMapSnapshot] = useState<string | null>(null);
+  const [placeName, setPlaceName] = useState<string | null>(null);
+  const { exportWithSnapshot, generating } = usePdfExport();
+  const center: [number, number] | null = map ? [map.getCenter().lat, map.getCenter().lng] : null;
+
+  useEffect(() => {
+    if (!center) {
+      setPlaceName(null);
+      return;
+    }
+    const controller = new AbortController();
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000"}/api/reverse-geocode?lat=${center[0]}&lon=${center[1]}`, {
+      signal: controller.signal,
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.label) setPlaceName(data.label.split(",").slice(0, 2).join(","));
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [center ? `${center[0].toFixed(4)},${center[1].toFixed(4)}` : ""])
 
   return (
     <AnimatePresence>
@@ -109,7 +139,29 @@ export function EvidencePanel({ open, onClose }: EvidencePanelProps) {
               </button>
             </div>
 
-            <div className="flex flex-1 flex-col overflow-y-auto px-4 py-5">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-5">
+              {/* Export Intelligence Report — one-click PDF */}
+              <button
+                type="button"
+                onClick={() =>
+                  exportWithSnapshot(reportRef, setMapSnapshot, {
+                    regionResult,
+                    geometry,
+                    center,
+                    leftDate: regionResult?.start_date ?? (splitEnabled ? `${splitLeftYear}-08-27` : activeDate || "2021-08-27"),
+                    rightDate: regionResult?.end_date ?? (splitEnabled ? `${splitRightYear}-08-27` : activeDate || "2026-08-27"),
+                    placeName,
+                    narrative: evidence?.reply ?? timelineNarrative,
+                  })
+                }
+                disabled={generating}
+                data-cursor="action"
+                className="mb-3 flex w-full items-center justify-center gap-2 rounded-hard border border-signal-dim bg-[#05070A] px-3 py-2.5 font-mono text-micro font-semibold uppercase tracking-[0.12em] text-signal transition-colors hover:bg-signal hover:text-void disabled:opacity-50"
+              >
+                {generating ? <Loader size={12} className="animate-spin" /> : <FileDown size={12} />}
+                {generating ? "Generating PDF..." : "📄 EXPORT EVIDENCE REPORT"}
+              </button>
+
               {/* Split-screen toggle — dark glass, spec: [ ⚡ Toggle Split-Screen ] */}
               <button
                 type="button"
@@ -179,6 +231,21 @@ export function EvidencePanel({ open, onClose }: EvidencePanelProps) {
               )}
             </div>
           </GlassPanel>
+          {/* Hidden report template for PDF capture — preview */}
+          <div aria-hidden="true" className="pointer-events-none">
+            <ReportTemplate
+              ref={reportRef}
+              regionResult={regionResult}
+              narrative={evidence?.reply ?? timelineNarrative}
+              geometry={geometry}
+              mapSnapshot={mapSnapshot}
+              center={center}
+              timestamp={new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC"}
+              leftDate={regionResult?.start_date ?? (splitEnabled ? `${splitLeftYear}-08-27` : activeDate || "2021-08-27")}
+              rightDate={regionResult?.end_date ?? (splitEnabled ? `${splitRightYear}-08-27` : activeDate || "2026-08-27")}
+              placeName={placeName}
+            />
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

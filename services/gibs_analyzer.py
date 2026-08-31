@@ -336,7 +336,31 @@ def detect_features(
 CHANGE_ORDER = (("vegetation", "Vegetation"), ("water", "Water"), ("built_up", "built-up land"))
 
 
-def _change_narrative(start_date: str, end_date: str, change: dict[str, float]) -> str:
+def _change_narrative(start_date: str, end_date: str, change: dict[str, float], query: str | None = None) -> str:
+    """Return a narrative that reflects what the user actually asked.
+
+    For broad "what changed overall" questions, the "remained largely stable"
+    fallback is appropriate when all |change| < 1%. For narrow questions
+    (e.g. "how much water changed?"), we report the specific class even if
+    its change is <1%, rather than a generic non-answer.
+    """
+    q = (query or "").lower()
+    narrow_target = None
+    if any(k in q for k in ("water", "river", "lake", "sea", "ocean")):
+        narrow_target = "water"
+    elif any(k in q for k in ("vegetation", "forest", "tree", "green", "grass", "crop", "ndvi")):
+        narrow_target = "vegetation"
+    elif any(k in q for k in ("built", "urban", "construction", "city", "building")):
+        narrow_target = "built_up"
+
+    if narrow_target:
+        v = change.get(narrow_target, 0)
+        label = {"water": "Water", "vegetation": "Vegetation", "built_up": "Built-up land"}[narrow_target]
+        if abs(v) < 1:
+            return f"Between {start_date} and {end_date}, {label.lower()} changed {v:+.1f}% — essentially stable for that class."
+        return f"Between {start_date} and {end_date}, {label} {'grew' if v > 0 else 'dropped'} {abs(v):.1f}%."
+
+    # Broad query — original behavior: only narrate classes with |change|>=1%, else stable
     parts = []
     for cls, label in CHANGE_ORDER:
         value = change.get(cls, 0)
@@ -348,11 +372,11 @@ def _change_narrative(start_date: str, end_date: str, change: dict[str, float]) 
 
 
 def timeline(
-    geometry: dict[str, Any], start_date: str | None = None, end_date: str | None = None
+    geometry: dict[str, Any], start_date: str | None = None, end_date: str | None = None, query: str | None = None
 ) -> dict[str, Any]:
     """Compare a polygon at two dates and return the change, plus a narration."""
     result = analyze_region(geometry, start_date, end_date)
-    narrative = _change_narrative(result["start_date"], result["end_date"], result["change"])
+    narrative = _change_narrative(result["start_date"], result["end_date"], result["change"], query)
     return {"narrative": narrative, **result}
 
 
@@ -433,7 +457,7 @@ def _near_water_construction(
 
 
 def _area_change(
-    geometry: dict[str, Any], start_date: str, end_date: str
+    geometry: dict[str, Any], start_date: str, end_date: str, query: str | None = None
 ) -> dict[str, Any]:
     """Highlight pixels where built-up gained or vegetation was lost."""
     polygon = shape(gis_engine._parse_geometry(geometry))
@@ -454,7 +478,7 @@ def _area_change(
         "vegetation": round(float(end_stats["vegetation_pct"]) - float(start_stats["vegetation_pct"]), 1),
         "built_up": round(float(end_stats["built_up_pct"]) - float(start_stats["built_up_pct"]), 1),
     }
-    reply = _change_narrative(start_date, end_date, change)
+    reply = _change_narrative(start_date, end_date, change, query)
     return {
         "intent": "change",
         "reply": reply,
@@ -476,7 +500,7 @@ def spatial_query(
     if intent == "proximity":
         return _near_water_construction(geometry, start_date, end_date)
     if intent == "change":
-        return _area_change(geometry, start_date, end_date)
+        return _area_change(geometry, start_date, end_date, query)
     result = detect_features(geometry, query, end_date)
     return {"intent": "detect", **result}
 

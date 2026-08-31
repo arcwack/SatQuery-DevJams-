@@ -9,11 +9,10 @@ import { postQuery } from "@/lib/api";
 import { viewGeometry } from "@/lib/geo";
 
 const SUGGESTED_PROMPTS = [
-  "What's visible here?",
+  "Mark the vegetation",
+  "How much vegetation has evolved",
   "Find all water bodies",
-  "Show areas near the river where construction increased",
-  "Name all water bodies and rank them biggest to smallest",
-  "What changed here over time?",
+  "Name all water bodies and rank them",
 ];
 
 export function ChatPanel() {
@@ -38,8 +37,18 @@ export function ChatPanel() {
     setSending(true);
 
     try {
-      const geometry = useMapStore.getState().geometry ?? viewGeometry();
-      if (!geometry) throw new Error("Map not ready yet — draw a region or wait a moment.");
+      const geometry = useMapStore.getState().geometry;
+      if (!geometry) {
+        const fallbackCheck = viewGeometry();
+        if (!fallbackCheck) {
+          throw new Error("Map not ready yet — draw a region or wait a moment.");
+        }
+        addMessage(
+          "assistant",
+          "No region selected. Draw a boundary to analyze its land cover and recent change."
+        );
+        return;
+      }
       const result = await postQuery({ geometry, query: trimmed });
       addMessage("assistant", result.reply);
       setHighlights(result.highlights);
@@ -63,13 +72,13 @@ export function ChatPanel() {
   return (
     <GlassPanel
       variant="hard"
-      className="flex h-full w-full flex-col border-l-0 border-t-0 border-b-0"
+      className="flex h-full min-h-0 w-full flex-col border-l-0 border-t-0 border-b-0"
     >
       <div className="flex h-14 shrink-0 items-center border-b border-line px-4">
         <Eyebrow tone="signal">Query console</Eyebrow>
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
         {messages.length === 0 && !sending && (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
             <div className="flex h-9 w-9 items-center justify-center rounded-hard border border-line text-ink-faint">
