@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: satquery-api
+    runtime: python
+    rootDir: satquery
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: EE_PROJECT
+        sync: false
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        sync: false
+    healthCheckPath: /docs
