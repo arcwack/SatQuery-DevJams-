@@ -221,3 +221,59 @@ export interface GeocodeResult {
 export function geocode(query: string): Promise<GeocodeResult> {
   return getJSON<GeocodeResult>(`/api/geocode?q=${encodeURIComponent(query)}`);
 }
+
+export interface GEEStats {
+  veg_pct: number;
+  water_pct: number;
+  built_up_pct: number;
+  valid_pixels: number;
+  start_date: string;
+  end_date: string;
+  source: string;
+}
+
+export interface GEEStatsResult {
+  stats: GEEStats;
+  true_color_tile_url: string;
+  ndvi_tile_url: string;
+  geometry: GeoJSONGeometry;
+}
+
+export interface GEEChangeMetric {
+  start_pct: number;
+  end_pct: number;
+  net_change_pct: number;
+}
+
+export interface GEETimelineDiff {
+  start_range: [string, string];
+  end_range: [string, string];
+  vegetation: GEEChangeMetric;
+  water: GEEChangeMetric;
+  built_up: GEEChangeMetric;
+  source: string;
+}
+
+export interface GEETimelineResult {
+  narrative: string;
+  diff: GEETimelineDiff;
+  geometry: GeoJSONGeometry;
+}
+
+export function postGeeAnalyze(body: {
+  geometry: GeoJSONGeometry;
+  start_date: string;
+  end_date: string;
+}): Promise<GEEStatsResult> {
+  return postJSON<GEEStatsResult>("/api/gee/analyze", body);
+}
+
+export function postGeeTimeline(body: {
+  geometry: GeoJSONGeometry;
+  start_range_from: string;
+  start_range_to: string;
+  end_range_from: string;
+  end_range_to: string;
+}): Promise<GEETimelineResult> {
+  return postJSON<GEETimelineResult>("/api/gee/timeline", body);
+}

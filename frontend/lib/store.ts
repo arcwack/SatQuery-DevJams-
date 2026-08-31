@@ -57,6 +57,9 @@ interface WorkspaceState {
   splitRightDate: string;
   splitLeftYear: number;
   splitRightYear: number;
+  useGee: boolean;
+  geeTileUrl: string | null;
+  geeNdviTileUrl: string | null;
 
   setRasters: (rasters: RasterInfo[]) => void;
   setActiveYear: (year: number) => void;
@@ -82,6 +85,8 @@ interface WorkspaceState {
   setSplitYears: (leftYear: number, rightYear: number) => void;
   setSplitLeftYear: (year: number) => void;
   setSplitRightYear: (year: number) => void;
+  setUseGee: (useGee: boolean) => void;
+  setGeeTileUrls: (trueColor: string | null, ndvi: string | null) => void;
 }
 
 let messageId = 0;
@@ -111,6 +116,9 @@ export const useMapStore = create<WorkspaceState>((set) => ({
   splitRightDate: "2026-08-27",
   splitLeftYear: 2021,
   splitRightYear: 2026,
+  useGee: false,
+  geeTileUrl: null,
+  geeNdviTileUrl: null,
 
   setRasters: (rasters) => set({ rasters }),
   setActiveYear: (activeYear) => set({ activeYear }),
@@ -146,4 +154,6 @@ export const useMapStore = create<WorkspaceState>((set) => ({
   }),
   setSplitLeftYear: (year) => set((s) => ({ splitLeftYear: year, splitLeftDate: `${year}-08-27` })),
   setSplitRightYear: (year) => set((s) => ({ splitRightYear: year, splitRightDate: `${year}-08-27` })),
+  setUseGee: (useGee) => set({ useGee }),
+  setGeeTileUrls: (geeTileUrl, geeNdviTileUrl) => set({ geeTileUrl, geeNdviTileUrl }),
 }));

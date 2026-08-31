@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from services import gis_engine, gibs_analyzer, geocoder, known_cases, query_engine
+from services import gee_engine, gis_engine, gibs_analyzer, geocoder, known_cases, query_engine
 from services import llm_service
 from services.llm_service import generate_spatial_response
 
@@ -143,6 +143,41 @@ class DetectResponse(BaseModel):
     highlights: dict[str, Any]
 
 
+class GEEStatsRequest(BaseModel):
+    """Request body for POST /api/gee/analyze (live Sentinel-2 via Earth Engine)."""
+
+    geometry: dict[str, Any] = Field(..., description="GeoJSON polygon in EPSG:4326.")
+    start_date: str = Field(..., description="ISO start date, e.g. 2024-01-01.")
+    end_date: str = Field(..., description="ISO end date, e.g. 2024-06-01.")
+
+
+class GEEStatsResponse(BaseModel):
+    """Response payload for POST /api/gee/analyze."""
+
+    stats: dict[str, Any]
+    true_color_tile_url: str
+    ndvi_tile_url: str
+    geometry: dict[str, Any]
+
+
+class GEETimelineRequest(BaseModel):
+    """Request body for POST /api/gee/timeline (live Sentinel-2 change)."""
+
+    geometry: dict[str, Any] = Field(..., description="GeoJSON polygon in EPSG:4326.")
+    start_range_from: str = Field(..., description="Start of the earlier window, ISO date.")
+    start_range_to: str = Field(..., description="End of the earlier window, ISO date.")
+    end_range_from: str = Field(..., description="Start of the later window, ISO date.")
+    end_range_to: str = Field(..., description="End of the later window, ISO date.")
+
+
+class GEETimelineResponse(BaseModel):
+    """Response payload for POST /api/gee/timeline."""
+
+    narrative: str
+    diff: dict[str, Any]
+    geometry: dict[str, Any]
+
+
 class GeocodeResponse(BaseModel):
     """Response payload for GET /api/geocode."""
 
@@ -190,6 +225,8 @@ def _to_http_error(exc: Exception) -> HTTPException:
     """Map domain exceptions to HTTP error responses."""
     if isinstance(exc, gis_engine.GeometryError):
         return HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))
+    if isinstance(exc, gee_engine.EarthEngineNotConfigured):
+        return HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc))
     if isinstance(exc, FileNotFoundError):
         return HTTPException(status.HTTP_404_NOT_FOUND, str(exc))
     if isinstance(exc, RuntimeError):
@@ -225,6 +262,51 @@ def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
             status.HTTP_502_BAD_GATEWAY, f"Unable to fetch satellite imagery: {exc}"
         ) from exc
     return AnalyzeResponse(**result)
+
+
+@app.post(
+    "/api/gee/analyze",
+    response_model=GEEStatsResponse,
+    summary="Google Earth Engine region analysis (live Sentinel-2)",
+)
+def gee_analyze(request: GEEStatsRequest) -> GEEStatsResponse:
+    """Compute land-cover stats and tile URLs for a region from live Sentinel-2 data."""
+    try:
+        stats = gee_engine.compute_stats(request.geometry, request.start_date, request.end_date)
+        true_color = gee_engine.true_color_tile_url(
+            request.geometry, request.start_date, request.end_date
+        )
+        ndvi = gee_engine.ndvi_tile_url(request.geometry, request.start_date, request.end_date)
+    except (gis_engine.GeometryError, gee_engine.EarthEngineNotConfigured, ValueError, RuntimeError) as exc:
+        raise _to_http_error(exc) from exc
+    return GEEStatsResponse(
+        stats=stats, true_color_tile_url=true_color, ndvi_tile_url=ndvi, geometry=request.geometry
+    )
+
+
+@app.post(
+    "/api/gee/timeline",
+    response_model=GEETimelineResponse,
+    summary="Google Earth Engine temporal change (live Sentinel-2)",
+)
+def gee_timeline(request: GEETimelineRequest) -> GEETimelineResponse:
+    """Compare two live Sentinel-2 composite windows and narrate the change."""
+    try:
+        diff = gee_engine.compute_temporal_change(
+            request.geometry,
+            (request.start_range_from, request.start_range_to),
+            (request.end_range_from, request.end_range_to),
+        )
+        narrative = generate_spatial_response(
+            "Summarize how vegetation, water, and built-up cover changed between "
+            f"the {request.start_range_from}..{request.start_range_to} period and "
+            f"the {request.end_range_from}..{request.end_range_to} period. State "
+            "clearly whether each increased or decreased.",
+            diff,
+        )
+    except (gis_engine.GeometryError, gee_engine.EarthEngineNotConfigured, ValueError, RuntimeError) as exc:
+        raise _to_http_error(exc) from exc
+    return GEETimelineResponse(narrative=narrative, diff=diff, geometry=request.geometry)
 
 
 @app.post("/api/detect", response_model=DetectResponse, summary="Detect & highlight features")
